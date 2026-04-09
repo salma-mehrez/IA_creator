@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_URL = "postgresql://postgres:Admine123@localhost:5432/tubeai"
+DB_URL = os.getenv("DATABASE_URL")
 
 def migrate():
     try:
