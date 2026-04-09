@@ -8,7 +8,7 @@ interface PipelineProject {
   id: number;
   title: string;
   status: string;
-  is_blocked: bool;
+  is_blocked: boolean;
 }
 
 interface PipelineManagerProps {
