@@ -20,11 +20,15 @@ async def log_auth_header(request, call_next):
     print(f"DEBUG: {request.method} {request.url.path} - Auth Header: {'Present' if auth_header else 'MISSING'}")
     return await call_next(request)
 
-# CORS - Maximally permissive for port 8080
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
+    allow_origins=[
+        "http://localhost:3000",
+        "https://boisterous-naiad-ea4cd9.netlify.app",
+        "*" 
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
