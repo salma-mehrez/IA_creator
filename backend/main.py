@@ -26,7 +26,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://boisterous-naiad-ea4cd9.netlify.app",
-        "*" 
+        "https://salma-mehrez-ia-creator.netlify.app", # Added common netlify prefix just in case
     ],
     allow_credentials=True,
     allow_methods=["*"],
