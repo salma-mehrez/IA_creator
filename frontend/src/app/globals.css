@@ -1,0 +1,282 @@
+@import "tailwindcss";
+
+/* ================================================================
+   DESIGN SYSTEM — TubeAI Creator
+   Inspired by: Notion (layout), Linear (density), Stripe (polish)
+   Fonts: Outfit (headings) + Inter (body)
+   ================================================================ */
+
+/* Enable class-based dark mode for Tailwind dark: variants */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ======================== LIGHT MODE TOKENS ======================== */
+:root {
+  /* — Backgrounds — */
+  --background:        #F8FAFC;   /* Slate-50 */
+  --surface:           #FFFFFF;   /* Cards, panels, modals */
+  --surface-secondary: #F1F5F9;   /* Slate-100 */
+  --surface-hover:     #E2E8F0;   /* Slate-200 */
+  --surface-overlay:   #FFFFFF;   /* Dropdown / overlay panels */
+
+  /* — Borders — */
+  --border:            #E2E8F0;   /* Slate-200 */
+  --border-subtle:     #F1F5F9;   /* Slate-100 */
+  --border-strong:     #CBD5E1;   /* Slate-300 */
+
+  /* — Text — */
+  --foreground:        #0F172A;   /* Slate-900 */
+  --foreground-2:      #334155;   /* Slate-700 */
+  --muted:             #64748B;   /* Slate-500 */
+  --subtle:            #94A3B8;   /* Slate-400 */
+
+  /* — Brand (Indigo) — */
+  --brand:             #6366F1;
+  --brand-hover:       #4F46E5;
+  --brand-light:       #EEF2FF;
+  --brand-border:      #C7D2FE;
+  --brand-text:        #4338CA;
+
+  /* — Sidebar — */
+  --sidebar-bg:        #FFFFFF;
+  --sidebar-border:    rgba(15, 23, 42, 0.1);
+  --sidebar-text:      #64748B;
+  --sidebar-text-active: #0F172A;
+  --sidebar-hover:     rgba(15, 23, 42, 0.04);
+  --sidebar-active:    rgba(15, 23, 42, 0.08);
+  --sidebar-accent:    #6366F1;
+
+  /* — Status — */
+  --success:           #16A34A;
+  --success-bg:        #F0FDF4;
+  --success-border:    #BBF7D0;
+  --warning:           #D97706;
+  --warning-bg:        #FFFBEB;
+  --warning-border:    #FDE68A;
+  --danger:            #DC2626;
+  --danger-bg:         #FEF2F2;
+  --danger-border:     #FECACA;
+  --info:              #0284C7;
+  --info-bg:           #F0F9FF;
+  --info-border:       #BAE6FD;
+}
+
+/* ======================== DARK MODE TOKENS ======================== */
+.dark {
+  /* — Backgrounds — */
+  --background:        #0B1120;
+  --surface:           #131A2B;
+  --surface-secondary: #192132;
+  --surface-hover:     #1E293B;
+  --surface-overlay:   #192132;
+
+  /* — Borders — */
+  --border:            #1E293B;
+  --border-subtle:     #192132;
+  --border-strong:     #334155;
+
+  /* — Text — */
+  --foreground:        #F8FAFC;
+  --foreground-2:      #CBD5E1;
+  --muted:             #94A3B8;
+  --subtle:            #64748B;
+
+  /* — Brand (Indigo) — */
+  --brand:             #7C6EF0;
+  --brand-hover:       #9085F5;
+  --brand-light:       #1C1A3A;
+  --brand-border:      #2D2A58;
+  --brand-text:        #A59BF8;
+
+  /* — Sidebar — */
+  --sidebar-bg:        #0B1120;
+  --sidebar-border:    rgba(255, 255, 255, 0.06);
+  --sidebar-text:      #64748B;
+  --sidebar-text-active: #F8FAFC;
+  --sidebar-hover:     rgba(255, 255, 255, 0.04);
+  --sidebar-active:    rgba(255, 255, 255, 0.08);
+  --sidebar-accent:    #7C6EF0;
+
+  /* — Status — */
+  --success:           #22C55E;
+  --success-bg:        #071A0E;
+  --success-border:    #14532D;
+  --warning:           #F59E0B;
+  --warning-bg:        #1A1100;
+  --warning-border:    #451A03;
+  --danger:            #F87171;
+  --danger-bg:         #1A0404;
+  --danger-border:     #450A0A;
+  --info:              #38BDF8;
+  --info-bg:           #041422;
+  --info-border:       #075985;
+}
+
+/* ======================== TAILWIND THEME MAPPING ======================== */
+@theme inline {
+  /* Backgrounds */
+  --color-background:        var(--background);
+  --color-surface:           var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-hover:     var(--surface-hover);
+  --color-surface-overlay:   var(--surface-overlay);
+
+  /* Borders */
+  --color-border:            var(--border);
+  --color-border-subtle:     var(--border-subtle);
+  --color-border-strong:     var(--border-strong);
+
+  /* Text */
+  --color-foreground:        var(--foreground);
+  --color-foreground-2:      var(--foreground-2);
+  --color-muted:             var(--muted);
+  --color-subtle:            var(--subtle);
+
+  /* Brand */
+  --color-brand:             var(--brand);
+  --color-brand-hover:       var(--brand-hover);
+  --color-brand-light:       var(--brand-light);
+  --color-brand-border:      var(--brand-border);
+  --color-brand-text:        var(--brand-text);
+
+  /* Status */
+  --color-success:           var(--success);
+  --color-success-bg:        var(--success-bg);
+  --color-success-border:    var(--success-border);
+  --color-warning:           var(--warning);
+  --color-warning-bg:        var(--warning-bg);
+  --color-warning-border:    var(--warning-border);
+  --color-danger:            var(--danger);
+  --color-danger-bg:         var(--danger-bg);
+  --color-danger-border:     var(--danger-border);
+  --color-info:              var(--info);
+  --color-info-bg:           var(--info-bg);
+  --color-info-border:       var(--info-border);
+
+  /* Fonts */
+  --font-heading:            var(--font-heading);
+  --font-sans:               var(--font-sans);
+}
+
+/* ======================== BASE STYLES ======================== */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+/* Disable transitions on page load to avoid flash */
+.no-transition, .no-transition * {
+  transition: none !important;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-heading), sans-serif;
+  letter-spacing: -0.025em;
+}
+
+/* ======================== SCROLLBAR ======================== */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ======================== SELECTION ======================== */
+::selection { background: var(--brand-light); color: var(--brand-text); }
+
+/* ======================== UTILITY CLASSES ======================== */
+
+/* Input base style */
+.input-base {
+  width: 100%;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  outline: none;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.input-base::placeholder { color: var(--subtle); }
+.input-base:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-light);
+}
+
+/* Card base style */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+}
+
+/* Button variants */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--brand);
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  transition: background 0.15s, transform 0.1s;
+  cursor: pointer;
+}
+.btn-primary:hover { background: var(--brand-hover); }
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface);
+  color: var(--foreground-2);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  transition: border-color 0.15s, background 0.15s;
+  cursor: pointer;
+}
+.btn-secondary:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-secondary);
+}
+
+/* Focus ring utility */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ======================== PREMIUM UTILITIES ======================== */
+.glass-panel {
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+}
+
+.dark .glass-panel {
+  background: rgba(26, 25, 23, 0.7);
+}
+
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
