@@ -23,12 +23,8 @@ async def log_auth_header(request, call_next):
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://boisterous-naiad-ea4cd9.netlify.app",
-        "https://salma-mehrez-ia-creator.netlify.app", # Added common netlify prefix just in case
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
