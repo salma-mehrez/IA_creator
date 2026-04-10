@@ -19,6 +19,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://boisterous-naiad-ea4cd9.netlify.app",
+        "https://mon-outil-tubeai.netlify.app",
         "https://tubeai.netlify.app",
         "http://localhost:3000",
         "*"
