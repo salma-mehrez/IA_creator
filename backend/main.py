@@ -9,7 +9,17 @@ import os
 # Load environment variables
 load_dotenv()
 
-# Create tables
+# Create tables and run migrations
+try:
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        # S'assurer que les nouvelles colonnes existent (migrations manuelles simples)
+        conn.execute(text("ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS suggested_ideas_json TEXT"))
+        conn.commit()
+    print("Migrations manuelles terminées avec succès.")
+except Exception as e:
+    print(f"Note: Migration manuelle ignorée ou échouée (déjà à jour ?) : {e}")
+
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="TubeAI Creator API")
