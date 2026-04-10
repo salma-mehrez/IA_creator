@@ -356,10 +356,48 @@ def chat_for_ideas(
             channel_context=channel_context,
             language=request_data.language
         )
+        
+        # PERSISTENCE: Save user's last message and assistant's response
+        # Note: We save the user message only if it's the last one in the list
+        user_msg = request_data.messages[-1]
+        db.add(models.BrainstormingMessage(
+            role=user_msg.role,
+            content=user_msg.content,
+            workspace_id=workspace_id
+        ))
+        
+        assistant_msg = models.BrainstormingMessage(
+            role="assistant",
+            content=result["message"],
+            suggested_title=result.get("suggested_title"),
+            viral_score=result.get("viral_score"),
+            add_to_planning=result.get("add_to_planning", False),
+            workspace_id=workspace_id
+        )
+        db.add(assistant_msg)
+        db.commit()
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur IA: {str(e)}")
 
     return schemas.ChatResponse(**result)
+
+@router.get("/{workspace_id}/chat-history", response_model=List[schemas.BrainstormingMessageOut])
+def get_chat_history(
+    workspace_id: int,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    workspace = db.query(models.Workspace).filter(
+        models.Workspace.id == workspace_id,
+        models.Workspace.owner_id == current_user.id
+    ).first()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace non trouvé")
+        
+    return db.query(models.BrainstormingMessage).filter(
+        models.BrainstormingMessage.workspace_id == workspace_id
+    ).order_by(models.BrainstormingMessage.created_at.asc()).all()
 
 
 @router.get("/{workspace_id}/quick-suggestions", response_model=List[schemas.QuickSuggestion])
@@ -388,12 +426,28 @@ def get_quick_suggestions(
     else:
         channel_context += "Aucune vidéo publiée pour le moment.\n"
 
+    # PERSISTENCE: Check if we have a fresh cache
+    refresh = False # Or check a query param if needed
+    if workspace.suggested_ideas_json and not refresh:
+        try:
+            import json
+            cached = json.loads(workspace.suggested_ideas_json)
+            return [schemas.QuickSuggestion(**s) for s in cached]
+        except:
+            pass
+
     try:
         suggestions = ai_service.generate_quick_suggestions(
             niche=workspace.niche or "YouTube",
             channel_context=channel_context,
             language=language
         )
+        
+        # SAVE TO CACHE
+        import json
+        workspace.suggested_ideas_json = json.dumps(suggestions)
+        db.commit()
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur IA: {str(e)}")
 

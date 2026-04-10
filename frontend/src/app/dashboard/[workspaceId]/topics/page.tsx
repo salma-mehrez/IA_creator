@@ -50,14 +50,24 @@ export default function TopicsPage() {
   chatBottomRef.current?.scrollIntoView({ behavior:"smooth"});
  }, [messages]);
 
- const loadSuggestions = async () => {
+  const loadSuggestions = async () => {
   setSuggestionsLoading(true);
   const res = await fetchApi(`/workspaces/${workspaceId}/quick-suggestions?language=${language}`);
   if (res.data) setSuggestions(res.data as QuickSuggestion[]);
   setSuggestionsLoading(false);
  };
 
- useEffect(() => { loadSuggestions(); }, [workspaceId]);
+ const loadChatHistory = async () => {
+  const res = await fetchApi(`/workspaces/${workspaceId}/chat-history`);
+  if (res.data && (res.data as ChatMessage[]).length > 0) {
+   setMessages(res.data as ChatMessage[]);
+  }
+ };
+
+ useEffect(() => {
+  loadSuggestions();
+  loadChatHistory();
+ }, [workspaceId]);
 
  const showSuccess = (msg: string) => {
   setSuccess(msg);

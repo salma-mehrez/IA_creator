@@ -66,6 +66,7 @@ class WorkspaceOut(BaseModel):
     channel_profile_image: Optional[str] = None
     channel_banner_image: Optional[str] = None
     niche: Optional[str]
+    suggested_ideas_json: Optional[str] = None
     reference_transcript: Optional[str]
     default_persona: Optional[str]
     owner_id: int
@@ -241,6 +242,18 @@ class QuickSuggestion(BaseModel):
     why: str
     viral_score: int
     format: str
+
+class BrainstormingMessageOut(BaseModel):
+    id: int
+    role: str
+    content: str
+    suggested_title: Optional[str] = None
+    viral_score: Optional[int] = None
+    add_to_planning: bool = False
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 class AuditOut(BaseModel):
     score: int

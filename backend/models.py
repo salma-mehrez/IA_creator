@@ -44,6 +44,8 @@ class Workspace(Base):
     owner = relationship("User", back_populates="workspaces")
     videos = relationship("Video", back_populates="workspace", cascade="all, delete-orphan")
     youtube_videos = relationship("YouTubeVideo", back_populates="workspace", cascade="all, delete-orphan")
+    chat_messages = relationship("BrainstormingMessage", back_populates="workspace", cascade="all, delete-orphan")
+    suggested_ideas_json = Column(Text, nullable=True) # Cache pour les 6 suggestions rapides
 
 
 class VideoStatus(str, enum.Enum):
@@ -121,3 +123,18 @@ class YouTubeVideo(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     workspace = relationship("Workspace", back_populates="youtube_videos")
+
+class BrainstormingMessage(Base):
+    __tablename__ = "brainstorming_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    role = Column(String, nullable=False) # "user" or "assistant"
+    content = Column(Text, nullable=False)
+    suggested_title = Column(String, nullable=True)
+    viral_score = Column(Integer, nullable=True)
+    add_to_planning = Column(Boolean, default=False)
+    
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    workspace = relationship("Workspace", back_populates="chat_messages")
