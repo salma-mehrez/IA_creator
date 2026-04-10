@@ -28,12 +28,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Middleware de Logs (Après CORS)
+# 2. Middleware de Logs (Après CORS) et Diagnostic
 @app.middleware("http")
-async def log_auth_header(request, call_next):
-    auth_header = request.headers.get("authorization")
-    print(f"DEBUG: {request.method} {request.url.path} - Auth Header: {'Present' if auth_header else 'MISSING'}")
-    return await call_next(request)
+async def log_and_diagnose(request, call_next):
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as e:
+        import traceback
+        error_msg = f"CRASH: {str(e)}"
+        print(f"CRITICAL ERROR: {error_msg}")
+        print(traceback.format_exc())
+        
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": error_msg,
+                "type": type(e).__name__,
+                "debug_info": "Check Render logs for traceback"
+            }
+        )
 
 app.include_router(auth_router.router)
 app.include_router(workspace_router.router)

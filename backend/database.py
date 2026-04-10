@@ -8,8 +8,9 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-if not DATABASE_URL or not DATABASE_URL.startswith("postgresql"):
-    raise RuntimeError("DATABASE_URL must be a PostgreSQL URL")
+# Conversion pour SQLAlchemy 1.4+ (requis pour Neon/Render)
+if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
