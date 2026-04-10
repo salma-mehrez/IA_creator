@@ -79,7 +79,7 @@ def add_topic_to_planning(
     db.refresh(new_video)
     return new_video
 
-@router.get("/", response_model=List[schemas.WorkspaceOut])
+@router.get("", response_model=List[schemas.WorkspaceOut])
 def get_workspaces(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     return db.query(models.Workspace).filter(models.Workspace.owner_id == current_user.id).all()
 
@@ -101,7 +101,7 @@ def update_workspace_settings(workspace_id: int, workspace_data: schemas.Workspa
     db.refresh(workspace)
     return workspace
 
-@router.post("/", response_model=schemas.WorkspaceOut, status_code=201)
+@router.post("", response_model=schemas.WorkspaceOut, status_code=201)
 def create_workspace(workspace: schemas.WorkspaceCreate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
     channel_id = workspace.channel_id
     if not channel_id and workspace.channel_url:

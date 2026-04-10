@@ -13,16 +13,6 @@ export interface ApiResponse<T = any> {
 export async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   // S'assurer que l'endpoint commence par /
   let cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-  const isGet = !options.method || options.method.toUpperCase() === "GET";
-  
-  if (isGet && !cleanEndpoint.includes(".")) {
-    // Séparer le path des query params
-    const [path, query] = cleanEndpoint.split("?");
-    if (!path.endsWith("/")) {
-      cleanEndpoint = query ? `${path}/?${query}` : `${path}/`;
-    }
-  }
-  
   const url = `${API_URL}${cleanEndpoint}`;
  
  // Récupérer le token s'il existe (côté client uniquement)
