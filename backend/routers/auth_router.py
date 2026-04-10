@@ -24,7 +24,7 @@ def register(user_data: schemas.UserCreate, background_tasks: BackgroundTasks, d
         username=user_data.username,
         hashed_password=hashed_pw,
         verification_token=verification_token,
-        is_verified=False
+        is_verified=True
     )
     db.add(new_user)
     db.commit()
