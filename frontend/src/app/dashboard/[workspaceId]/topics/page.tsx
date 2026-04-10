@@ -102,7 +102,7 @@ export default function TopicsPage() {
   } else {
    setMessages(prev => [...prev, {
     role:"assistant",
-    content: t("topics.chat.error")
+    content: res.error || t("topics.chat.error")
    }]);
   }
   setChatLoading(false);

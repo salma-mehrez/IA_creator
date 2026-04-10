@@ -15,6 +15,20 @@ try:
     with engine.connect() as conn:
         # S'assurer que les nouvelles colonnes existent (migrations manuelles simples)
         conn.execute(text("ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS suggested_ideas_json TEXT"))
+        
+        # S'assurer que la table des messages existe (hotfix migration)
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS brainstorming_messages (
+                id SERIAL PRIMARY KEY,
+                role VARCHAR NOT NULL,
+                content TEXT NOT NULL,
+                suggested_title VARCHAR,
+                viral_score INTEGER,
+                add_to_planning BOOLEAN DEFAULT FALSE,
+                workspace_id INTEGER NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+        """))
         conn.commit()
     print("Migrations manuelles terminées avec succès.")
 except Exception as e:
