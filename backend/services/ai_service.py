@@ -333,8 +333,14 @@ def chat_idea_refinement(messages: List[Dict], niche: str, channel_context: str 
         )
         return _parse_json_response(response.text)
     except Exception as e:
-        print(f"ERROR Chat Gemini: {str(e)}")
-        return {"message": "Désolé, une erreur s'est produite. Réessaie.", "suggested_title": None, "viral_score": None, "add_to_planning": False}
+        error_detail = str(e)
+        print(f"CRITICAL ERROR Chat Gemini: {error_detail}")
+        return {
+            "message": f"Désolé, une erreur IA s'est produite : {error_detail}. Vérifie ta GEMINI_API_KEY sur Render.",
+            "suggested_title": None, 
+            "viral_score": None, 
+            "add_to_planning": False
+        }
 
 
 def generate_quick_suggestions(niche: str, channel_context: str = "", language: str = "en") -> List[Dict]:
