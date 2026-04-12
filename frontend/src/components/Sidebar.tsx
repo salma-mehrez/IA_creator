@@ -172,6 +172,7 @@ export default function Sidebar({ isCollapsed = false }: { isCollapsed?: boolean
     <div className={cn("flex items-center rounded-xl transition-colors group cursor-pointer relative", isCollapsed ? "justify-center p-2" : "gap-2.5 px-2.5 py-2")}
      onMouseEnter={(e) => (e.currentTarget.style.background ="var(--sidebar-hover)")}
      onMouseLeave={(e) => (e.currentTarget.style.background ="transparent")}
+     onClick={() => router.push("/dashboard/profile")}
     >
      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-sm">
       {user?.username?.[0]?.toUpperCase() ||"U"}
@@ -187,11 +188,11 @@ export default function Sidebar({ isCollapsed = false }: { isCollapsed?: boolean
       </div>
      )}
      {!isCollapsed ? (
-      <button onClick={handleLogout} className="p-1 opacity-40 hover:opacity-100 transition-opacity">
+      <button onClick={(e) => { e.stopPropagation(); handleLogout(); }} className="p-1 opacity-40 hover:opacity-100 transition-opacity">
        <LogOut className="h-4 w-4" />
       </button>
      ) : (
-      <button onClick={handleLogout} className="absolute left-full ml-4 p-2 bg-red-500/10 text-red-500 rounded-lg hidden group-hover:block whitespace-nowrap shadow-xl">
+      <button onClick={(e) => { e.stopPropagation(); handleLogout(); }} className="absolute left-full ml-4 p-2 bg-red-500/10 text-red-500 rounded-lg hidden group-hover:block whitespace-nowrap shadow-xl">
        <div className="flex items-center gap-2">
          <LogOut className="h-4 w-4" />
          <span className="text-xs font-bold">Logout</span>

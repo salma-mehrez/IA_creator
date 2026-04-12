@@ -100,3 +100,18 @@ def reset_password(data: schemas.PasswordResetConfirm, db: Session = Depends(get
 @router.get("/me", response_model=schemas.UserOut)
 def get_me(current_user: models.User = Depends(auth.get_current_user)):
     return current_user
+
+@router.put("/me", response_model=schemas.UserOut)
+def update_me(update_data: schemas.UserUpdate, current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    if update_data.username is not None:
+        if update_data.username != current_user.username:
+            if db.query(models.User).filter(models.User.username == update_data.username).first():
+                raise HTTPException(status_code=400, detail="Ce nom d'utilisateur est déjà pris")
+            current_user.username = update_data.username
+    
+    if update_data.password is not None and len(update_data.password) > 0:
+        current_user.hashed_password = auth.hash_password(update_data.password)
+        
+    db.commit()
+    db.refresh(current_user)
+    return current_user

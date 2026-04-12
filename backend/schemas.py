@@ -14,6 +14,10 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    password: Optional[str] = None
+
 class UserOut(BaseModel):
     id: int
     email: str
