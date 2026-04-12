@@ -7,30 +7,6 @@ import { fetchApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
 
-const PERSONAS = [
- { id:"Expert",   emoji:"🎓", nameKey:"Expert & Analytical",   descKey:"Serious tone, based on facts and evidence."},
- { id:"Storyteller",emoji:"📖", nameKey:"The Storyteller",     descKey:"Focuses on emotion and captivating narration."},
- { id:"Skeptic",  emoji:"🤔", nameKey:"The Skeptic",          descKey:"Questions received wisdom with a provocative tone."},
- { id:"Enthusiast", emoji:"🔥", nameKey:"The Enthusiast",       descKey:"Overflowing energy, motivating and inspiring."},
- { id:"Humorist",  emoji:"😄", nameKey:"The Humorist",         descKey:"Uses sarcasm and humor to educate."},
-];
-
-const PERSONAS_FR = [
- { id:"Expert",   emoji:"🎓", nameKey:"Expert & Analytique",   descKey:"Ton sérieux, basé sur les faits et les preuves."},
- { id:"Storyteller",emoji:"📖", nameKey:"Le Storyteller",      descKey:"Met l'accent sur l'émotion et la narration captivante."},
- { id:"Skeptic",  emoji:"🤔", nameKey:"Le Sceptique",         descKey:"Remet en question les idées reçues, ton provocateur."},
- { id:"Enthusiast", emoji:"🔥", nameKey:"L'Enthousiaste",       descKey:"Énergie débordante, motivant et inspirant."},
- { id:"Humorist",  emoji:"😄", nameKey:"L'Humoriste",          descKey:"Utilise le sarcasme et l'humour pour éduquer."},
-];
-
-const PERSONAS_ES = [
- { id:"Expert",   emoji:"🎓", nameKey:"Experto & Analítico",   descKey:"Tono serio, basado en hechos y evidencias."},
- { id:"Storyteller",emoji:"📖", nameKey:"El Narrador",         descKey:"Se centra en la emoción y la narración cautivadora."},
- { id:"Skeptic",  emoji:"🤔", nameKey:"El Escéptico",          descKey:"Cuestiona las ideas recibidas con un tono provocador."},
- { id:"Enthusiast", emoji:"🔥", nameKey:"El Entusiasta",        descKey:"Energía desbordante, motivador e inspirador."},
- { id:"Humorist",  emoji:"😄", nameKey:"El Humorista",         descKey:"Usa el sarcasmo y el humor para educar."},
-];
-
 export default function SettingsPage() {
  const { workspaceId } = useParams();
  const { t, language } = useLanguage();
@@ -38,8 +14,6 @@ export default function SettingsPage() {
  const [saving, setSaving] = useState(false);
  const [saved, setSaved] = useState(false);
  const [error, setError] = useState("");
-
- const personas = language === "fr" ? PERSONAS_FR : language === "es" ? PERSONAS_ES : PERSONAS;
 
  const [formData, setFormData] = useState({
   name:"",
@@ -156,47 +130,6 @@ export default function SettingsPage() {
          placeholder="Ex: Entrepreneurship, Gaming, Fitness..."
          className="input-base"
         />
-       </div>
-      </div>
-     </div>
-
-     {/* Persona */}
-     <div className="bg-surface border border-border rounded-3xl overflow-hidden shadow-sm">
-      <div className="px-7 py-5 border-b border-border-subtle flex items-center gap-3">
-       <div className="w-8 h-8 bg-brand-light rounded-xl flex items-center justify-center">
-        <Mic className="h-4 w-4 text-brand" />
-       </div>
-       <div>
-        <h2 className="text-sm font-bold text-foreground">{t("script.persona")}</h2>
-        <p className="text-xs text-subtle">{t("script.ai_disclaimer")}</p>
-       </div>
-      </div>
-      <div className="p-7">
-       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {personas.map(p => {
-         const isActive = formData.default_persona === p.id;
-         return (
-          <button
-           key={p.id}
-           onClick={() => setFormData({ ...formData, default_persona: p.id })}
-           className={cn(
-           "flex items-start gap-3 p-4 rounded-2xl border-2 transition-all text-left",
-            isActive
-             ?"border-brand bg-brand-light"
-             :"border-border bg-surface hover:border-brand-border hover:bg-brand-light/30"
-           )}
-          >
-           <span className="text-2xl flex-shrink-0 mt-0.5">{p.emoji}</span>
-           <div>
-            <p className={cn("text-sm font-bold mb-1", isActive ?"text-brand-text":"text-foreground")}>
-             {p.nameKey}
-            </p>
-            <p className="text-xs text-subtle leading-relaxed">{p.descKey}</p>
-           </div>
-           {isActive && <CheckCircle2 className="h-4 w-4 text-brand flex-shrink-0 ml-auto mt-0.5" />}
-          </button>
-         );
-        })}
        </div>
       </div>
      </div>

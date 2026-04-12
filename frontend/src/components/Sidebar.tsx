@@ -113,16 +113,9 @@ export default function Sidebar({ isCollapsed = false }: { isCollapsed?: boolean
        {isCollapsed && <div className="h-px bg-white/5 my-4 mx-4"></div>}
        <NavItem
         href={`/dashboard/${workspaceId}/settings`}
-        icon={Target}
-        label={t("sidebar.style_label")}
-        active={pathname.includes("/settings")}
-        isCollapsed={isCollapsed}
-       />
-       <NavItem
-        href={`/dashboard/${workspaceId}/settings?tab=general`}
         icon={Settings}
         label={t("sidebar.settings_label")}
-        active={pathname.includes("/settings") && pathname.includes("general")}
+        active={pathname.includes("/settings")}
         isCollapsed={isCollapsed}
        />
       </div>
