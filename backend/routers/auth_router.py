@@ -30,8 +30,8 @@ def register(user_data: schemas.UserCreate, background_tasks: BackgroundTasks, d
     db.commit()
     db.refresh(new_user)
 
-    # Envoyer l'email de vérification en tâche de fond
-    background_tasks.add_task(send_verification_email, new_user.email, new_user.username, verification_token)
+    # Envoyer l'email de bienvenue en tâche de fond (puisque le compte est pré-vérifié)
+    background_tasks.add_task(send_welcome_email, new_user.email, new_user.username)
 
     return new_user
 
