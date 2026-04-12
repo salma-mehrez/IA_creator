@@ -38,7 +38,7 @@ def generate_script_scenes(title: str, description: str, niche: str, style_conte
         raise ValueError("GEMINI_API_KEY non configurée")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-flash-latest')
 
     # Calcul des cibles pour l'IA
     target_words = duration_minutes * 140 # Un peu moins que 150 pour laisser respirer
@@ -124,7 +124,7 @@ def generate_script_plan(title: str, description: str, niche: str, reference_tra
         raise ValueError("GEMINI_API_KEY non configurée")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-flash-latest')
 
     prompt = f"""
     Tu es un STRATÈGE YouTube EXPERT (Niveau: MrBeast / Veritasium). 
@@ -201,7 +201,7 @@ def generate_script_from_plan(title: str, plan: List[Dict], niche: str, referenc
         raise ValueError("GEMINI_API_KEY non configurée")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-flash-latest')
 
     # Formatting plan for the prompt
     plan_str = "\n".join([f"- {p['order']}. {p['title']} ({p['estimated_duration']}s) : {p['goal']}" for p in plan])
@@ -281,7 +281,7 @@ def chat_idea_refinement(messages: List[Dict], niche: str, channel_context: str 
         raise ValueError("GEMINI_API_KEY non configurée")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-flash-latest')
 
     history_str = ""
     for msg in messages[:-1]:
@@ -350,7 +350,7 @@ def generate_quick_suggestions(niche: str, channel_context: str = "", language: 
         raise ValueError("GEMINI_API_KEY non configurée")
 
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-flash-latest')
 
     prompt = f"""
     Tu es un expert en stratégie YouTube. Analyse ce profil de chaîne et génère 6 idées de vidéos stratégiques.
