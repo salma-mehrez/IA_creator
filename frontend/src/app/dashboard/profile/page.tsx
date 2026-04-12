@@ -5,12 +5,10 @@ import { Save, Loader2, CheckCircle2, AlertTriangle, User, Lock, Mail, Upload, C
 import { fetchApi } from "@/lib/api";
 import { useLanguage } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth";
 
 export default function ProfilePage() {
   const { t, language } = useLanguage();
   const router = useRouter();
-  const { refreshUser } = useAuth(); // Assuming there's a way to refresh user context if available, otherwise window.location.reload()
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -132,7 +130,7 @@ export default function ProfilePage() {
     } else {
       setSaved(true);
       setFormData(prev => ({ ...prev, current_password: "", password: "", confirm_password: "" }));
-      if (refreshUser) refreshUser();
+      window.dispatchEvent(new Event("user-updated")); // Optional: simple way to tell other components to refresh
       setTimeout(() => setSaved(false), 3000);
     }
     setSaving(false);
