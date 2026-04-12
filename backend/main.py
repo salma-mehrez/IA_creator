@@ -15,6 +15,7 @@ try:
     with engine.connect() as conn:
         # S'assurer que les nouvelles colonnes existent (migrations manuelles simples)
         conn.execute(text("ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS suggested_ideas_json TEXT"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT"))
         
         # S'assurer que la table des messages existe (hotfix migration)
         conn.execute(text("""

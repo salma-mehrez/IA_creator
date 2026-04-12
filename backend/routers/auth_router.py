@@ -109,7 +109,12 @@ def update_me(update_data: schemas.UserUpdate, current_user: models.User = Depen
                 raise HTTPException(status_code=400, detail="Ce nom d'utilisateur est déjà pris")
             current_user.username = update_data.username
     
+    if update_data.avatar_url is not None:
+        current_user.avatar_url = update_data.avatar_url
+    
     if update_data.password is not None and len(update_data.password) > 0:
+        if not update_data.current_password or not auth.verify_password(update_data.current_password, current_user.hashed_password):
+            raise HTTPException(status_code=400, detail="Le mot de passe actuel est incorrect")
         current_user.hashed_password = auth.hash_password(update_data.password)
         
     db.commit()

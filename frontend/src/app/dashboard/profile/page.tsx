@@ -1,24 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Save, Loader2, CheckCircle2, AlertTriangle, User, Lock, Mail } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Save, Loader2, CheckCircle2, AlertTriangle, User, Lock, Mail, Upload, Camera } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { useLanguage } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
 
 export default function ProfilePage() {
   const { t, language } = useLanguage();
   const router = useRouter();
+  const { refreshUser } = useAuth(); // Assuming there's a way to refresh user context if available, otherwise window.location.reload()
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
+    current_password: "",
     password: "",
+    confirm_password: "",
+    avatar_url: ""
   });
 
   useEffect(() => {
@@ -28,7 +35,10 @@ export default function ProfilePage() {
         setFormData({
           username: u.username || "",
           email: u.email || "",
+          current_password: "",
           password: "",
+          confirm_password: "",
+          avatar_url: u.avatar_url || ""
         });
       } else {
         router.push("/login");
@@ -37,14 +47,78 @@ export default function ProfilePage() {
     });
   }, [router]);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError(language === 'en' ? 'Image must be less than 2MB' : language === 'es' ? 'La imagen debe tener menos de 2 MB' : 'L\'image doit faire moins de 2 Mo');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      // Resize logic using a canvas for optimization
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const MAX_SIZE = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // compress as light jpeg
+        const base64String = canvas.toDataURL("image/jpeg", 0.8);
+        setFormData(prev => ({ ...prev, avatar_url: base64String }));
+      };
+      
+      if (typeof reader.result === 'string') {
+        img.src = reader.result;
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = async () => {
-    setSaving(true);
     setError("");
+
+    // Validation
+    if (formData.password && formData.password !== formData.confirm_password) {
+      setError(language === "en" ? "Passwords do not match." : language === "es" ? "Las contraseñas no coinciden." : "Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    if (formData.password && !formData.current_password) {
+      setError(language === "en" ? "Please enter your current password to change it." : language === "es" ? "Ingrese su contraseña actual para cambiarla." : "Veuillez entrer votre mot de passe actuel pour le changer.");
+      return;
+    }
+
+    setSaving(true);
     setSaved(false);
 
-    const updatePayload: any = { username: formData.username };
+    const updatePayload: any = { 
+      username: formData.username,
+      avatar_url: formData.avatar_url
+    };
     if (formData.password) {
       updatePayload.password = formData.password;
+      updatePayload.current_password = formData.current_password;
     }
 
     const res = await fetchApi("/auth/me", {
@@ -53,11 +127,12 @@ export default function ProfilePage() {
     });
 
     if (res.error) {
-      // Basic translation fallback for potential hardcoded backend string
-      setError(res.error === "Ce nom d'utilisateur est déjà pris" ? (language === "en" ? "This username is already taken" : res.error) : res.error);
+      setError(res.error === "Ce nom d'utilisateur est déjà pris" ? (language === "en" ? "This username is already taken" : res.error) : 
+               res.error === "Le mot de passe actuel est incorrect" ? (language === "en" ? "Current password is incorrect" : res.error) : res.error);
     } else {
       setSaved(true);
-      setFormData(prev => ({ ...prev, password: "" })); // clear password field
+      setFormData(prev => ({ ...prev, current_password: "", password: "", confirm_password: "" }));
+      if (refreshUser) refreshUser();
       setTimeout(() => setSaved(false), 3000);
     }
     setSaving(false);
@@ -80,7 +155,7 @@ export default function ProfilePage() {
             {language === 'en' ? 'My Profile' : language === 'es' ? 'Mi Perfil' : 'Mon Profil'}
           </h1>
           <p className="text-xs text-subtle mt-0.5">
-            {language === 'en' ? 'Manage your account information.' : language === 'es' ? 'Gestiona la información de tu cuenta.' : 'Gérez vos informations de compte.'}
+            {language === 'en' ? 'Manage your account information and avatar.' : language === 'es' ? 'Gestiona la información de tu cuenta y avatar.' : 'Gérez vos informations de compte et votre avatar.'}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -119,9 +194,44 @@ export default function ProfilePage() {
                 </h2>
               </div>
             </div>
-            <div className="p-7 space-y-6">
+            <div className="p-7 space-y-8">
               
-              <div className="space-y-1.5">
+              {/* Avatar Section */}
+              <div className="flex items-center gap-6">
+                <div 
+                  className="w-20 h-20 rounded-full border-2 border-border bg-surface-secondary flex items-center justify-center relative overflow-hidden group cursor-pointer shrink-0 shadow-sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {formData.avatar_url ? (
+                    <img src={formData.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="h-8 w-8 text-subtle" />
+                  )}
+                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera className="h-6 w-6 text-white mb-1" />
+                    <span className="text-[9px] text-white font-bold uppercase tracking-wider">
+                      {language === "en" ? "Change" : "Modifier"}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-foreground mb-1">
+                    {language === "en" ? "Profile Picture" : "Photo de profil"}
+                  </h3>
+                  <p className="text-xs text-subtle max-w-sm">
+                    {language === "en" ? "Click to upload an image. Real formats are automatically compressed. Max 2MB." : "Cliquez pour importer une image. Les vrais formats sont automatiquement compressés. Max 2Mo."}
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/gif"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5 pt-4 border-t border-border-subtle">
                 <label className="text-xs font-bold text-subtle uppercase tracking-wide flex items-center gap-1.5">
                   <Mail className="h-3.5 w-3.5" /> Email
                 </label>
@@ -150,22 +260,55 @@ export default function ProfilePage() {
                 />
               </div>
 
-              <div className="pt-4 border-t border-border-subtle">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-subtle uppercase tracking-wide flex items-center gap-1.5">
-                    <Lock className="h-3.5 w-3.5 text-danger" /> 
-                    {language === 'en' ? 'New Password' : language === 'es' ? 'Nueva Contraseña' : 'Nouveau mot de passe'}
-                  </label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    placeholder="••••••••"
-                    className="input-base"
-                  />
-                  <p className="text-[10px] text-foreground-2 pl-1 opacity-70">
-                    {language === 'en' ? 'Leave empty to keep your current password.' : language === 'es' ? 'Dejar en blanco para mantener su contraseña actual.' : 'Laissez vide pour conserver votre mot de passe actuel.'}
-                  </p>
+              {/* Password Section */}
+              <div className="pt-6 border-t border-border-subtle space-y-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Lock className="h-4 w-4 text-warning" />
+                  <h3 className="font-bold text-sm text-foreground">
+                    {language === 'en' ? 'Change Password' : language === 'es' ? 'Cambiar Contraseña' : 'Changer le mot de passe'}
+                  </h3>
+                </div>
+
+                <div className="grid gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-subtle uppercase tracking-wide">
+                      {language === 'en' ? 'Current Password' : 'Mot de passe actuel'}
+                    </label>
+                    <input
+                      type="password"
+                      value={formData.current_password}
+                      onChange={(e) => setFormData({ ...formData, current_password: e.target.value })}
+                      placeholder="••••••••"
+                      className="input-base"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-subtle uppercase tracking-wide">
+                        {language === 'en' ? 'New Password' : 'Nouveau mot de passe'}
+                      </label>
+                      <input
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        placeholder="••••••••"
+                        className="input-base"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-subtle uppercase tracking-wide">
+                        {language === 'en' ? 'Confirm Password' : 'Confirmer le mot de passe'}
+                      </label>
+                      <input
+                        type="password"
+                        value={formData.confirm_password}
+                        onChange={(e) => setFormData({ ...formData, confirm_password: e.target.value })}
+                        placeholder="••••••••"
+                        className="input-base"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 

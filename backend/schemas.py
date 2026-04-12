@@ -17,11 +17,14 @@ class UserLogin(BaseModel):
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     password: Optional[str] = None
+    current_password: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 class UserOut(BaseModel):
     id: int
     email: str
     username: str
+    avatar_url: Optional[str] = None
     is_active: bool
     is_verified: bool
     created_at: datetime

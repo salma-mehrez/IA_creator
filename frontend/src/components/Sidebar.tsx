@@ -174,8 +174,12 @@ export default function Sidebar({ isCollapsed = false }: { isCollapsed?: boolean
      onMouseLeave={(e) => (e.currentTarget.style.background ="transparent")}
      onClick={() => router.push("/dashboard/profile")}
     >
-     <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-sm">
-      {user?.username?.[0]?.toUpperCase() ||"U"}
+     <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-sm overflow-hidden">
+      {(user as any)?.avatar_url ? (
+        <img src={(user as any).avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+      ) : (
+        user?.username?.[0]?.toUpperCase() ||"U"
+      )}
      </div>
      {!isCollapsed && (
       <div className="flex-1 min-w-0">
