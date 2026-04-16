@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Lightbulb, FileText, Search, Layers, List, LayoutGrid, Download, ChevronLeft, ChevronRight, Video } from "lucide-react";
 import { fetchApi } from "@/lib/api";
@@ -66,6 +66,7 @@ export default function MasterDashboard() {
 
     // Drawer state
     const [drawer, setDrawer] = useState<DrawerConfig | null>(null);
+    const autoSyncTried = useRef(false);
 
     const loadData = useCallback(async () => {
         const [wsRes, statsRes, auditRes, vidRes] = await Promise.all([
@@ -81,10 +82,16 @@ export default function MasterDashboard() {
         if (!vidRes.error) setVideos(vidRes.data as any[]);
 
         setLoading(false);
+        return vidRes.data as any[];
     }, [workspaceId]);
 
     useEffect(() => {
-        loadData();
+        loadData().then((vids: any[] | undefined) => {
+            if (vids && vids.length === 0 && !autoSyncTried.current) {
+                autoSyncTried.current = true;
+                handleSync();
+            }
+        });
     }, [loadData]);
 
     const handleSync = async () => {
@@ -215,10 +222,10 @@ export default function MasterDashboard() {
         title: t("dash.module.topics.title"),
         description: t("dash.module.topics.desc"),
         features: [
-            language === "fr" ? "Chat IA pour affiner tes idées en temps réel" : language === "es" ? "Chat IA para refinar tus ideas en tiempo real" : "AI chat to refine your ideas in real time",
-            language === "fr" ? "Suggestions basées sur ta chaîne YouTube" : language === "es" ? "Sugerencias basadas en tu canal de YouTube" : "Suggestions based on your YouTube channel",
-            language === "fr" ? "Score de viralité pour chaque idée" : language === "es" ? "Puntuación de viralidad por idea" : "Viral score for each idea",
-            language === "fr" ? "Ajout direct au planning en un clic" : language === "es" ? "Añade directamente al planning" : "Add directly to planning in one click",
+            t("dash.feat.topics.ai_chat"),
+            t("dash.feat.topics.suggestions"),
+            t("dash.feat.topics.viral"),
+            t("dash.feat.topics.planning"),
         ],
         href: `/dashboard/${workspaceId}/topics`,
         colorClass: "bg-amber-400",
@@ -230,10 +237,10 @@ export default function MasterDashboard() {
         title: t("dash.module.script.title"),
         description: t("dash.module.script.desc"),
         features: [
-            language === "fr" ? "Brief guidé en 3 étapes (audience, angle, accroche)" : language === "es" ? "Brief guiado en 3 pasos (audiencia, ángulo, gancho)" : "Guided brief in 3 steps (audience, angle, hook)",
-            language === "fr" ? "Structure automatique par scènes" : language === "es" ? "Estructura automática por escenas" : "Automatic scene-by-scene structure",
-            language === "fr" ? "Script complet avec texte parlé et indications visuelles" : language === "es" ? "Script completo con texto hablado e indicaciones visuales" : "Full script with spoken text and visual cues",
-            language === "fr" ? "Export copier-coller pour ta préparation tournage" : language === "es" ? "Exportación copiar-pegar para preparar el rodaje" : "Copy-paste export for your shoot prep",
+            t("dash.feat.script.brief"),
+            t("dash.feat.script.structure"),
+            t("dash.feat.script.full"),
+            t("dash.feat.script.export"),
         ],
         href: `/dashboard/${workspaceId}/script`,
         colorClass: "bg-indigo-600",
@@ -267,7 +274,6 @@ export default function MasterDashboard() {
                       href={`/dashboard/${workspaceId}/topics`}
                       colorClass="bg-amber-400"
                       iconColor="text-white"
-                      onClick={openTopics}
                     />
                     <ModuleHero
                       title={t("dash.module.script.title")}
@@ -276,7 +282,6 @@ export default function MasterDashboard() {
                       href={`/dashboard/${workspaceId}/script`}
                       colorClass="bg-indigo-600"
                       iconColor="text-white"
-                      onClick={openScript}
                     />
                 </div>
 
@@ -300,14 +305,14 @@ export default function MasterDashboard() {
                             className={`flex items-center gap-2 font-bold text-sm pb-3 border-b-2 transition-colors ${activeTab === "channel" ? "text-brand border-brand" : "text-subtle hover:text-foreground border-transparent"}`}
                         >
                             <Video className="w-4 h-4" />
-                            Channel Videos
+                            {t("dash.tabs.videos")}
                         </button>
                         <button
                             onClick={handleSimilarTabClick}
                             className={`flex items-center gap-2 font-bold text-sm pb-3 border-b-2 transition-colors ${activeTab === "similar" ? "text-brand border-brand" : "text-subtle hover:text-foreground border-transparent"}`}
                         >
                             <Layers className="w-4 h-4" />
-                            Similar Channels
+                            {t("dash.tabs.channels")}
                         </button>
                     </div>
 
@@ -320,7 +325,7 @@ export default function MasterDashboard() {
                             ) : similarChannels.length === 0 && similarLoaded ? (
                                 <div className="flex flex-col items-center justify-center py-20 opacity-50">
                                     <Layers className="w-12 h-12 mb-4 text-subtle" />
-                                    <p className="text-sm font-bold text-subtle uppercase tracking-widest">No similar channels found for this niche</p>
+                                    <p className="text-sm font-bold text-subtle uppercase tracking-widest">{t("dash.toolbar.no_results")}</p>
                                 </div>
                             ) : (
                                 <SimilarChannelGrid channels={similarChannels} />
@@ -335,7 +340,7 @@ export default function MasterDashboard() {
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-subtle" />
                                         <input
                                             type="text"
-                                            placeholder="Search videos..."
+                                            placeholder={t("dash.toolbar.search")}
                                             value={search}
                                             onChange={e => { setSearch(e.target.value); setCurrentPage(1); }}
                                             className="w-full pl-9 pr-4 py-2 bg-[#1e2336] border border-white/5 rounded-xl text-sm font-bold focus:ring-1 ring-brand outline-none transition-all placeholder:font-medium text-foreground"
@@ -347,7 +352,7 @@ export default function MasterDashboard() {
                                         onChange={e => { setFilterLength(e.target.value); setCurrentPage(1); }}
                                         className="appearance-none bg-[#1e2336] border border-white/5 text-sm font-bold px-4 py-2 rounded-xl outline-none focus:ring-1 ring-brand text-foreground cursor-pointer"
                                     >
-                                        <option value="all">All Lengths</option>
+                                        <option value="all">{t("dash.toolbar.filter_all")}</option>
                                         <option value="short">{"< 10 mins"}</option>
                                         <option value="long">{"> 10 mins"}</option>
                                     </select>
@@ -357,11 +362,11 @@ export default function MasterDashboard() {
                                         onChange={e => { setSortBy(e.target.value); setCurrentPage(1); }}
                                         className="appearance-none bg-[#1e2336] border border-white/5 text-sm font-bold px-4 py-2 rounded-xl outline-none focus:ring-1 ring-brand text-foreground cursor-pointer"
                                     >
-                                        <option value="views_desc">Highest Views</option>
-                                        <option value="views_asc">Lowest Views</option>
-                                        <option value="likes_desc">Most Liked</option>
-                                        <option value="newest">Newest First</option>
-                                        <option value="oldest">Oldest First</option>
+                                        <option value="views_desc">{t("dash.toolbar.sort_views_high")}</option>
+                                        <option value="views_asc">{t("dash.toolbar.sort_views_low")}</option>
+                                        <option value="likes_desc">{t("dash.toolbar.sort_likes")}</option>
+                                        <option value="newest">{t("dash.toolbar.sort_newest")}</option>
+                                        <option value="oldest">{t("dash.toolbar.sort_oldest")}</option>
                                     </select>
                                 </div>
 
@@ -403,19 +408,19 @@ export default function MasterDashboard() {
                                     <button
                                         onClick={handleExport}
                                         className="flex items-center gap-2 px-4 py-2 bg-[#1e2336] border border-white/5 hover:bg-white/10 transition-colors rounded-xl text-sm font-bold text-foreground"
-                                        title="Export as CSV"
+                                        title={t("dash.toolbar.export")}
                                     >
                                         <Download className="w-4 h-4" />
-                                        Export
+                                        {t("dash.toolbar.export")}
                                     </button>
                                 </div>
                             </div>
 
                             {/* Pagination Info + Controls */}
                             <div className="flex flex-col md:flex-row md:items-center justify-between text-sm py-2 gap-4">
-                                <span className="text-subtle font-bold">
-                                    Showing {totalResults === 0 ? 0 : (safePage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(safePage * ITEMS_PER_PAGE, totalResults)} of {totalResults} results
-                                </span>
+                                 <span className="text-subtle font-bold">
+                                     {t("dash.toolbar.showing")} {totalResults === 0 ? 0 : (safePage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(safePage * ITEMS_PER_PAGE, totalResults)} {language === "fr" ? "de" : "of"} {totalResults} {t("dash.toolbar.results")}
+                                 </span>
 
                                 {totalPages > 1 && (
                                     <div className="flex items-center bg-[#1e2336] border border-white/5 rounded-xl p-1 gap-1">

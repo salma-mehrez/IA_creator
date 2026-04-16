@@ -132,12 +132,12 @@ export default function DashboardPage() {
   loadWorkspaces();
  };
 
- const addChannelLabel = language === "fr" ? "Ajouter une chaîne" : language === "es" ? "Añadir un canal" : "Add a Channel";
- const connectNewLabel = language === "fr" ? "Connecter une nouvelle chaîne YouTube" : language === "es" ? "Conectar un nuevo canal de YouTube" : "Connect a new YouTube channel";
- const newChannelLabel = language === "fr" ? "Nouvelle chaîne YouTube" : language === "es" ? "Nuevo canal de YouTube" : "New YouTube Channel";
- const yesLabel = language === "fr" ? "Oui" : language === "es" ? "Sí" : "Yes";
- const noLabel = language === "fr" ? "Non" : language === "es" ? "No" : "No";
- const deleteConfirmLabel = language === "fr" ? "Supprimer ?" : language === "es" ? "¿Eliminar?" : "Delete?";
+ const addChannelLabel = t("dash.common.add_channel");
+ const connectNewLabel = t("dash.common.connect_new");
+ const newChannelLabel = t("dash.common.new_channel_title");
+ const yesLabel = t("dash.common.yes");
+ const noLabel = t("dash.common.no");
+ const deleteConfirmLabel = t("dash.common.confirm_delete");
 
  return (
   <div className="flex flex-col h-full bg-background font-sans">

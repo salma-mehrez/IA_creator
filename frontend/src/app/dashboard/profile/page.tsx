@@ -50,7 +50,7 @@ export default function ProfilePage() {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      setError(language === 'en' ? 'Image must be less than 2MB' : language === 'es' ? 'La imagen debe tener menos de 2 MB' : 'L\'image doit faire moins de 2 Mo');
+      setError(t("profile.error.size"));
       return;
     }
 
@@ -98,12 +98,12 @@ export default function ProfilePage() {
 
     // Validation
     if (formData.password && formData.password !== formData.confirm_password) {
-      setError(language === "en" ? "Passwords do not match." : language === "es" ? "Las contraseñas no coinciden." : "Les mots de passe ne correspondent pas.");
+      setError(t("profile.error.mismatch"));
       return;
     }
 
     if (formData.password && !formData.current_password) {
-      setError(language === "en" ? "Please enter your current password to change it." : language === "es" ? "Ingrese su contraseña actual para cambiarla." : "Veuillez entrer votre mot de passe actuel pour le changer.");
+      setError(t("profile.error.current_req"));
       return;
     }
 
@@ -125,8 +125,8 @@ export default function ProfilePage() {
     });
 
     if (res.error) {
-      setError(res.error === "Ce nom d'utilisateur est déjà pris" ? (language === "en" ? "This username is already taken" : res.error) : 
-               res.error === "Le mot de passe actuel est incorrect" ? (language === "en" ? "Current password is incorrect" : res.error) : res.error);
+      setError(res.error === "Ce nom d'utilisateur est déjà pris" ? t("profile.error.taken") : 
+               res.error === "Le mot de passe actuel est incorrect" ? t("profile.error.incorrect") : res.error);
     } else {
       setSaved(true);
       setFormData(prev => ({ ...prev, current_password: "", password: "", confirm_password: "" }));
@@ -150,10 +150,10 @@ export default function ProfilePage() {
       <header className="px-8 py-5 border-b border-border flex items-center justify-between bg-surface sticky top-0 z-30 shadow-sm">
         <div>
           <h1 className="text-2xl font-heading text-foreground tracking-tight">
-            {language === 'en' ? 'My Profile' : language === 'es' ? 'Mi Perfil' : 'Mon Profil'}
+            {t("profile.title")}
           </h1>
           <p className="text-xs text-subtle mt-0.5">
-            {language === 'en' ? 'Manage your account information and avatar.' : language === 'es' ? 'Gestiona la información de tu cuenta y avatar.' : 'Gérez vos informations de compte et votre avatar.'}
+            {t("profile.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -188,7 +188,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <h2 className="text-sm font-bold text-foreground">
-                  {language === 'en' ? 'Account Details' : language === 'es' ? 'Detalles de la Cuenta' : 'Détails du compte'}
+                  {t("profile.section.account")}
                 </h2>
               </div>
             </div>
@@ -208,17 +208,17 @@ export default function ProfilePage() {
                   <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Camera className="h-6 w-6 text-white mb-1" />
                     <span className="text-[9px] text-white font-bold uppercase tracking-wider">
-                      {language === "en" ? "Change" : "Modifier"}
+                      {t("profile.label.avatar_change")}
                     </span>
                   </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-sm text-foreground mb-1">
-                    {language === "en" ? "Profile Picture" : "Photo de profil"}
-                  </h3>
-                  <p className="text-xs text-subtle max-w-sm">
-                    {language === "en" ? "Click to upload an image. Real formats are automatically compressed. Max 2MB." : "Cliquez pour importer une image. Les vrais formats sont automatiquement compressés. Max 2Mo."}
-                  </p>
+                 <div>
+                   <h3 className="font-bold text-sm text-foreground mb-1">
+                     {t("profile.label.avatar")}
+                   </h3>
+                   <p className="text-xs text-subtle max-w-sm">
+                     {t("profile.label.avatar_desc")}
+                   </p>
                   <input
                     type="file"
                     accept="image/png, image/jpeg, image/gif"
@@ -240,14 +240,14 @@ export default function ProfilePage() {
                   className="input-base bg-surface-secondary text-subtle cursor-not-allowed opacity-70"
                 />
                 <p className="text-[10px] text-foreground-2 pl-1 opacity-70">
-                  {language === 'en' ? 'Email address cannot be changed.' : language === 'es' ? 'La dirección de correo electrónico no se puede cambiar.' : 'L\'adresse email ne peut pas être modifiée.'}
+                  {t("profile.label.email_no_change")}
                 </p>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-subtle uppercase tracking-wide flex items-center gap-1.5">
                   <User className="h-3.5 w-3.5 text-brand" /> 
-                  {language === 'en' ? 'Username' : language === 'es' ? 'Nombre de usuario' : 'Nom d\'utilisateur'}
+                  {t("profile.label.username")}
                 </label>
                 <input
                   type="text"
@@ -263,14 +263,14 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2 mb-2">
                   <Lock className="h-4 w-4 text-warning" />
                   <h3 className="font-bold text-sm text-foreground">
-                    {language === 'en' ? 'Change Password' : language === 'es' ? 'Cambiar Contraseña' : 'Changer le mot de passe'}
+                    {t("profile.section.password")}
                   </h3>
                 </div>
 
                 <div className="grid gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-subtle uppercase tracking-wide">
-                      {language === 'en' ? 'Current Password' : 'Mot de passe actuel'}
+                      {t("profile.label.current_password")}
                     </label>
                     <input
                       type="password"
@@ -284,7 +284,7 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-subtle uppercase tracking-wide">
-                        {language === 'en' ? 'New Password' : 'Nouveau mot de passe'}
+                        {t("profile.label.new_password")}
                       </label>
                       <input
                         type="password"
@@ -296,7 +296,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-subtle uppercase tracking-wide">
-                        {language === 'en' ? 'Confirm Password' : 'Confirmer le mot de passe'}
+                        {t("profile.label.confirm_password")}
                       </label>
                       <input
                         type="password"

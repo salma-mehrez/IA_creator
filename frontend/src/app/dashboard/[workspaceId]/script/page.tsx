@@ -17,6 +17,7 @@ interface Video {
  title: string;
  status: string;
  script_plan?: string;
+ brief_json?: string;
 }
 
 interface Scene {
@@ -73,10 +74,10 @@ export default function ScriptPage() {
  const SCRIPT_LANGUAGES = ["Français", "English", "Español", "Deutsch", "Italiano", "العربية"];
 
  const HOOKS = language === "fr"
-  ? ["Question choc","Statistique surprenante","Anecdote personnelle","Démonstration directe"]
+  ? ["Question Provocatrice", "Statistique Impactante", "Anecdote Captivante", "Démonstration Directe", "Casser un Mythe", "Scénario 'Et si...'", "Urgence Critique"]
   : language === "es"
-  ? ["Pregunta impactante","Estadística sorprendente","Anécdota personal","Demostración directa"]
-  : ["Shock Question","Surprising Statistic","Personal Anecdote","Direct Demo"];
+  ? ["Pregunta Provocadora", "Estadística Impactante", "Anécdota Cautivadora", "Demostración Directa", "Romper un Mito", "Escenario 'Y si...'", "Urgencia Crítica"]
+  : ["Shocking Question", "Impactful Statistic", "Captivating Anecdote", "Direct Demo", "Myth Busting", "What if Scenario", "Urgent Pain Point"];
 
  const STYLES = language === "fr"
   ? ["Critique", "Professionnel", "Informatif", "Divertissant", "Convaincant", "Pédagogique"]
@@ -152,6 +153,9 @@ export default function ScriptPage() {
  const [showModal, setShowModal] = useState(false);
  const [newTitle, setNewTitle] = useState("");
  const [copied, setCopied] = useState(false);
+ const [ageRange, setAgeRange] = useState({ min: 18, max: 45 });
+ const [isSaving, setIsSaving] = useState(false);
+ const [lastSaved, setLastSaved] = useState<string | null>(null);
 
  const [brief, setBrief] = useState<GuidedBrief>({
   age_group: "",
@@ -163,6 +167,47 @@ export default function ScriptPage() {
   research_facts:"",
   cta:"",
  });
+ 
+ const [selectedHooks, setSelectedHooks] = useState<string[]>([]);
+
+ // Sync age_group string from range slider
+ useEffect(() => {
+  setBrief(prev => ({ ...prev, age_group: `${ageRange.min} - ${ageRange.max} ans` }));
+ }, [ageRange]);
+ 
+ // Auto-save brief draft
+ useEffect(() => {
+  if (!selected || loading) return;
+  
+  const timer = setTimeout(async () => {
+   setIsSaving(true);
+   const briefData = JSON.stringify({
+    brief,
+    ageRange,
+    selectedHooks
+   });
+   
+   // Don't save if it's the same as what reached us
+   if (selected.brief_json === briefData) {
+    setIsSaving(false);
+    return;
+   }
+
+   await fetchApi(`/videos/${selected.id}`, {
+    method: "PUT",
+    body: JSON.stringify({ brief_json: briefData })
+   });
+   
+   // Update local selected state to avoid loop
+   setSelected(prev => prev ? { ...prev, brief_json: briefData } : null);
+   
+   setIsSaving(true); // Keep showing for a moment
+   setTimeout(() => setIsSaving(false), 800);
+   setLastSaved(new Date().toLocaleTimeString());
+  }, 1500);
+
+  return () => clearTimeout(timer);
+ }, [brief, ageRange, selectedHooks, selected?.id]);
 
  const loadVideos = useCallback(async () => {
   setLoading(true);
@@ -194,11 +239,37 @@ export default function ScriptPage() {
   else setStep(1);
 
   const wsRes = await fetchApi(`/workspaces/${workspaceId}`);
-  if (wsRes.data) setBrief(prev => ({ ...prev, style: (wsRes.data as any).default_persona || STYLES[1] }));
+  const defaultPersona = (wsRes.data as any)?.default_persona || STYLES[1];
+
+  if (video.brief_json) {
+   try {
+    const data = JSON.parse(video.brief_json);
+    if (data.brief) setBrief(data.brief);
+    if (data.ageRange) setAgeRange(data.ageRange);
+    if (data.selectedHooks) setSelectedHooks(data.selectedHooks);
+   } catch (e) {
+    console.error("Error parsing brief_json", e);
+    setBrief(prev => ({ ...prev, style: defaultPersona }));
+   }
+  } else {
+   // Reset to defaults
+   setBrief({
+    age_group: "18 - 45 ans",
+    script_language: language === "fr" ? "Français" : language === "es" ? "Español" : "English",
+    style: defaultPersona,
+    key_points: "",
+    hook_style: HOOKS[0],
+    duration: 10,
+    research_facts: "",
+    cta: "",
+   });
+   setAgeRange({ min: 18, max: 45 });
+   setSelectedHooks([]);
+  }
  };
 
  const buildBriefText = () =>
- `Age Group: ${brief.age_group}\nLanguage: ${brief.script_language}\nStyle: ${brief.style}\nKey Points: ${brief.key_points}\nHook Style: ${brief.hook_style}\nCTA: ${brief.cta}`;
+ `Age Group: ${brief.age_group}\nLanguage: ${brief.script_language}\nStyle: ${brief.style}\nKey Points: ${brief.key_points}\nHook Style: ${selectedHooks.join(", ")}\nCTA: ${brief.cta}`;
 
  const handleGeneratePlan = async () => {
   if (!selected) return;
@@ -390,6 +461,16 @@ export default function ScriptPage() {
         </span>
        </div>
        <div className="flex items-center gap-3">
+        {isSaving && (
+          <span className="flex items-center gap-1.5 text-[10px] text-muted font-bold animate-pulse">
+            <Loader2 className="h-3 w-3 animate-spin" /> {language === "fr" ? "Sauvegarde..." : "Saving..."}
+          </span>
+        )}
+        {!isSaving && lastSaved && (
+          <span className="flex items-center gap-1.5 text-[10px] text-muted-hover font-bold">
+            <CheckCircle2 className="h-3 w-3 text-emerald-500" /> {language === "fr" ? "Brouillon enregistré" : "Draft saved"} ({lastSaved})
+          </span>
+        )}
         {error && <span className="flex items-center gap-1.5 text-xs text-red-600 font-medium"><AlertTriangle className="h-3.5 w-3.5" />{error}</span>}
         {success && <span className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium"><CheckCircle2 className="h-3.5 w-3.5" />{success}</span>}
         {step === 3 && scenes.length > 0 && (
@@ -446,18 +527,51 @@ export default function ScriptPage() {
         <div className="max-w-2xl mx-auto py-8 px-4 space-y-7">
 
          {/* Age Group */}
-         <div className="space-y-2">
-          <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-wide">
-           <Users className="h-3.5 w-3.5 text-indigo-400" /> {ageGroupLabel}
-          </label>
-          <input
-           type="text"
-           value={brief.age_group}
-           onChange={e => setBrief({ ...brief, age_group: e.target.value })}
-           placeholder={language === "fr" ? "ex: 18-35 ans, 25+ ans, tous publics..." : language === "es" ? "ej: 18-35 años, 25+ años..." : "ex: 18-35 yrs, 25+ yrs..."}
-           className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-sm text-foreground-2 placeholder-subtle focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all"
-          />
-         </div>
+         <div className="space-y-4">
+           <label className="flex items-center justify-between text-xs font-bold text-muted uppercase tracking-wide">
+            <span className="flex items-center gap-2"><Users className="h-3.5 w-3.5 text-indigo-400" /> {ageGroupLabel}</span>
+            <span className="text-brand font-black normal-case tracking-normal text-sm">{ageRange.min} - {ageRange.max} ans</span>
+           </label>
+           
+           <div className="px-2">
+            <div className="range-slider-container">
+              <div 
+               className="range-slider-progress"
+               style={{
+                left: `${ageRange.min}%`,
+                width: `${ageRange.max - ageRange.min}%`
+               }}
+              />
+             <input
+              type="range"
+              min="0"
+              max="100"
+              value={ageRange.min}
+              onChange={(e) => {
+               const val = Math.min(parseInt(e.target.value), ageRange.max - 1);
+               setAgeRange(prev => ({ ...prev, min: val }));
+              }}
+              className="range-slider-input"
+             />
+             <input
+              type="range"
+              min="0"
+              max="100"
+              value={ageRange.max}
+              onChange={(e) => {
+               const val = Math.max(parseInt(e.target.value), ageRange.min + 1);
+               setAgeRange(prev => ({ ...prev, max: val }));
+              }}
+              className="range-slider-input"
+             />
+            </div>
+            <div className="flex justify-between text-[10px] text-subtle mt-4">
+             <span>0 {language === "fr" ? "ans" : "yrs"}</span>
+             <span>50 {language === "fr" ? "ans" : "yrs"}</span>
+             <span>100 {language === "fr" ? "ans" : "yrs"}</span>
+            </div>
+           </div>
+          </div>
 
          {/* Script Language */}
          <div className="space-y-2">
@@ -472,8 +586,6 @@ export default function ScriptPage() {
            {SCRIPT_LANGUAGES.map(lang => <option key={lang}>{lang}</option>)}
           </select>
          </div>
-
-         {/* Angle condition removed as requested */}
 
          {/* Key Points */}
          <div className="space-y-2">
@@ -494,38 +606,50 @@ export default function ScriptPage() {
           <label className="flex items-center gap-2 text-xs font-bold text-muted uppercase tracking-wide">
            <Zap className="h-3.5 w-3.5 text-indigo-400" /> {hookLabel}
           </label>
-          <div className="grid grid-cols-2 gap-2">
-           {HOOKS.map(hook => (
-            <button
-             key={hook}
-             onClick={() => setBrief({ ...brief, hook_style: hook })}
-             className={cn(
-             "px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all text-left",
-              brief.hook_style === hook
-               ?"bg-brand text-white border-indigo-600"
-               :"bg-surface text-muted border-border hover:border-brand-border hover:text-brand"
-             )}
-            >
-             {hook}
-            </button>
-           ))}
-          </div>
+           <div className="grid grid-cols-2 gap-2">
+            {HOOKS.map(hook => {
+              const isActive = selectedHooks.includes(hook);
+              return (
+                <button
+                 key={hook}
+                 onClick={() => {
+                   if (isActive) {
+                     setSelectedHooks(selectedHooks.filter(h => h !== hook));
+                   } else {
+                     setSelectedHooks([...selectedHooks, hook]);
+                   }
+                 }}
+                 className={cn(
+                 "px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all text-left flex items-center justify-between",
+                  isActive
+                   ?"bg-brand text-white border-indigo-600 shadow-sm translate-y-[-1px]"
+                   :"bg-surface text-muted border-border hover:border-brand-border hover:bg-surface-secondary/50"
+                 )}
+                >
+                 <span>{hook}</span>
+                 {isActive && (
+                   <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                 )}
+                </button>
+              );
+            })}
+           </div>
          </div>
 
          {/* Duration */}
          <div className="space-y-2">
-          <label className="flex items-center justify-between text-xs font-bold text-muted uppercase tracking-wide">
-           <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-indigo-400" /> {durationLabel}</span>
-           <span className="text-brand font-black normal-case tracking-normal text-sm">{brief.duration} min</span>
-          </label>
+           <label className="flex items-center gap-3 text-xs font-bold text-muted uppercase tracking-wide">
+            <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 text-indigo-400" /> {durationLabel}</span>
+            <span className="text-brand font-black normal-case tracking-normal text-sm">{brief.duration} min</span>
+           </label>
           <input
-           type="range" min={3} max={25} step={1}
+           type="range" min={0} max={45} step={1}
            value={brief.duration}
            onChange={e => setBrief({ ...brief, duration: parseInt(e.target.value) })}
            className="w-full accent-[color:var(--brand)]"
           />
           <div className="flex justify-between text-[10px] text-subtle">
-           <span>3 min</span><span>15 min</span><span>25 min</span>
+           <span>0 min</span><span>25 min</span><span>45 min</span>
           </div>
          </div>
 
@@ -751,7 +875,7 @@ export default function ScriptPage() {
    </div>
 
    {/* Script Stats Panel */}
-   {selected && (
+   {selected && step === 3 && (
     <div className="w-[220px] flex-shrink-0 border-l border-border bg-surface flex flex-col overflow-hidden">
      <div className="px-4 py-3 border-b border-border flex items-center gap-2 flex-shrink-0">
       <BarChart2 className="h-3.5 w-3.5 text-subtle" />

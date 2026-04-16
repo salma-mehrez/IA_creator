@@ -111,6 +111,23 @@ def create_workspace(workspace: schemas.WorkspaceCreate, current_user: models.Us
     if channel_id:
         stats = youtube_service.get_channel_stats(channel_id)
         
+    # Auto-detect niche if not provided
+    detected_niche = workspace.niche
+    if stats and not detected_niche:
+        try:
+            # Fetch last 5 videos for context
+            last_vids = youtube_service.get_channel_videos(stats["channel_id"], max_results=5)
+            video_titles = [v["title"] for v in last_vids]
+            detected_niche = ai_service.detect_channel_niche(
+                channel_title=stats["title"],
+                description=stats.get("description", ""),
+                video_titles=video_titles,
+                language="fr"
+            )
+        except Exception as e:
+            print(f"Error auto-detecting niche: {e}")
+            detected_niche = "YouTube"
+
     new_workspace = models.Workspace(
         name=workspace.name,
         description=workspace.description,
@@ -122,7 +139,7 @@ def create_workspace(workspace: schemas.WorkspaceCreate, current_user: models.Us
         channel_profile_image=stats.get("thumbnail") if stats else None,
         channel_banner_image=stats.get("banner") if stats else None,
         last_sync=datetime.now() if stats else None,
-        niche=workspace.niche,
+        niche=detected_niche,
         owner_id=current_user.id
     )
     db.add(new_workspace)
@@ -185,6 +202,20 @@ def sync_workspace_youtube(workspace_id: int, current_user: models.User = Depend
     workspace.channel_banner_image = stats.get("banner")
     workspace.last_sync = datetime.now()
     
+    # Also update niche if it's missing or generic
+    if not workspace.niche or workspace.niche == "YouTube":
+        try:
+            last_vids = youtube_service.get_channel_videos(workspace.channel_id, max_results=5)
+            video_titles = [v["title"] for v in last_vids]
+            workspace.niche = ai_service.detect_channel_niche(
+                channel_title=stats["title"],
+                description=stats.get("description", ""),
+                video_titles=video_titles,
+                language="fr"
+            )
+        except:
+            pass
+
     db.commit()
     db.refresh(workspace)
     return workspace
@@ -286,7 +317,8 @@ def sync_workspace_videos(workspace_id: int, current_user: models.User = Depends
     synced_videos = []
     for v_data in unique_videos.values():
         existing_video = db.query(models.YouTubeVideo).filter(
-            models.YouTubeVideo.youtube_video_id == v_data["youtube_video_id"]
+            models.YouTubeVideo.youtube_video_id == v_data["youtube_video_id"],
+            models.YouTubeVideo.workspace_id == workspace.id
         ).first()
         
         if existing_video:
@@ -639,3 +671,72 @@ def get_similar_channels(
     niche = workspace.niche or workspace.name or "YouTube"
     channels = youtube_service.search_similar_channels(niche, max_results=12)
     return channels
+
+# ─── Publishing Hub Endpoints ─────────────────────────────────
+
+@router.post("/{workspace_id}/generate-titles", response_model=schemas.TitleGenerationResponse)
+def generate_titles(
+    workspace_id: int,
+    request_data: schemas.PublishRequest,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    workspace = db.query(models.Workspace).filter(
+        models.Workspace.id == workspace_id,
+        models.Workspace.owner_id == current_user.id
+    ).first()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace non trouvé")
+
+    titles = ai_service.generate_video_titles(
+        video_title=request_data.video_title,
+        niche=workspace.niche or "YouTube",
+        description=request_data.script_or_summary or "",
+        language=request_data.language
+    )
+    return {"titles": titles}
+
+@router.post("/{workspace_id}/generate-thumbnail-concepts", response_model=schemas.ThumbnailResponse)
+def generate_thumbnails(
+    workspace_id: int,
+    request_data: schemas.PublishRequest,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    workspace = db.query(models.Workspace).filter(
+        models.Workspace.id == workspace_id,
+        models.Workspace.owner_id == current_user.id
+    ).first()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace non trouvé")
+
+    concepts = ai_service.generate_thumbnail_concepts(
+        video_title=request_data.video_title,
+        niche=workspace.niche or "YouTube",
+        language=request_data.language,
+        image_model=request_data.image_model or "flux"
+    )
+    return {"concepts": concepts}
+
+@router.post("/{workspace_id}/generate-description", response_model=schemas.GeneratedDescription)
+def generate_description(
+    workspace_id: int,
+    request_data: schemas.PublishRequest,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    workspace = db.query(models.Workspace).filter(
+        models.Workspace.id == workspace_id,
+        models.Workspace.owner_id == current_user.id
+    ).first()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace non trouvé")
+
+    desc = ai_service.generate_video_description(
+        video_title=request_data.video_title,
+        script_summary=request_data.script_or_summary or "",
+        niche=workspace.niche or "YouTube",
+        keywords=request_data.keywords or "",
+        language=request_data.language
+    )
+    return desc

@@ -60,6 +60,7 @@ def get_channel_stats(channel_id: str):
         return {
             "channel_id": channel_data["id"],
             "title": snippet.get("title"),
+            "description": snippet.get("description"),
             "subscriber_count": int(stats.get("subscriberCount", 0)),
             "view_count": int(stats.get("viewCount", 0)),
             "video_count": int(stats.get("videoCount", 0)),
@@ -70,7 +71,7 @@ def get_channel_stats(channel_id: str):
         print(f"Error fetching YouTube statistics: {e}")
         return None
 
-def get_channel_videos(channel_id: str, max_results: int = 50):
+def get_channel_videos(channel_id: str, max_results: int = 200):
     """
     Fetch the list of published videos for a channel.
     """

@@ -2,6 +2,7 @@
 
 import { AlertTriangle, CheckCircle2, Trophy, Info, Sparkles, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 
 interface AuditReportProps {
   auditResult: any;
@@ -15,13 +16,8 @@ function formatNumber(n: number) {
 }
 
 export default function AuditReport({ auditResult, language }: AuditReportProps) {
+  const { t } = useLanguage();
   if (!auditResult) return null;
-
-  const labels = {
-    fr: { report: "Rapport d'audit IA", score: "Score / 100", analysis: "Analyse détaillée", best: "Meilleure vidéo", rec: "Recommandations IA" },
-    es: { report: "Informe de auditoría IA", score: "Score / 100", analysis: "Análisis detallado", best: "Mejor vídeo", rec: "Recomendaciones IA" },
-    en: { report: "AI Audit Report", score: "Score / 100", analysis: "Detailed Analysis", best: "Best Video", rec: "AI Recommendations" }
-  }[language === "fr" ? "fr" : language === "es" ? "es" : "en"] || { report: "AI Audit Report", score: "Score / 100", analysis: "Detailed Analysis", best: "Best Video", rec: "AI Recommendations" };
 
   const scoreColor = (auditResult?.score || 0) >= 80 ? "text-emerald-500" : (auditResult?.score || 0) >= 60 ? "text-amber-500" : "text-rose-500";
   const scoreBg = (auditResult?.score || 0) >= 80 ? "bg-emerald-500" : (auditResult?.score || 0) >= 60 ? "bg-amber-500" : "bg-rose-500";
@@ -33,7 +29,7 @@ export default function AuditReport({ auditResult, language }: AuditReportProps)
           <div className="w-8 h-8 bg-brand-light rounded-xl flex items-center justify-center shadow-sm">
             <Trophy className="h-4 w-4 text-brand" />
           </div>
-          <h3 className="text-sm font-black text-foreground tracking-tight uppercase">{labels.report}</h3>
+          <h3 className="text-sm font-black text-foreground tracking-tight uppercase">{t("audit.report")}</h3>
         </div>
         <span className={cn("text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border",
           auditResult.score >= 80 ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
@@ -50,7 +46,7 @@ export default function AuditReport({ auditResult, language }: AuditReportProps)
           <div className={cn("text-7xl font-black mb-2 tracking-tighter", scoreColor)}>
             {auditResult?.score || 0}
           </div>
-          <p className="text-[10px] font-black text-subtle uppercase tracking-widest">{labels.score}</p>
+          <p className="text-[10px] font-black text-subtle uppercase tracking-widest">{t("audit.score")}</p>
           <div className="w-full mt-6 px-6">
             <div className="h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
               <div
@@ -63,7 +59,7 @@ export default function AuditReport({ auditResult, language }: AuditReportProps)
 
         {/* Findings Column */}
         <div className="space-y-3">
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-4">{labels.analysis}</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-4">{t("audit.analysis")}</p>
           {auditResult.findings?.map((f: any, i: number) => (
             <div key={i} className={cn(
               "flex items-start gap-3 p-3.5 rounded-xl border",
@@ -94,7 +90,7 @@ export default function AuditReport({ auditResult, language }: AuditReportProps)
         <div className="space-y-5">
           {auditResult.top_video && (
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-4">{labels.best}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted mb-4">{t("audit.best_video")}</p>
               <div className="bg-surface border border-border rounded-2xl overflow-hidden group shadow-sm transition-all hover:shadow-md">
                 <div className="aspect-video relative overflow-hidden">
                   <img src={auditResult.top_video.thumbnail_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
@@ -114,7 +110,7 @@ export default function AuditReport({ auditResult, language }: AuditReportProps)
           <div className="bg-brand-light dark:bg-indigo-950/20 border border-brand/20 rounded-2xl p-5 shadow-inner">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="h-4 w-4 text-brand animate-pulse" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-brand">{labels.rec}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-brand">{t("audit.recommendations")}</p>
             </div>
             <ul className="space-y-3">
               {auditResult.recommendations?.map((r: string, i: number) => (

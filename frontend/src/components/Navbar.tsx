@@ -23,12 +23,7 @@ export default function Navbar() {
       </span>
      </Link>
 
-     {/* Nav links */}
-     <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-muted">
-      <a href="#presentation" className="hover:text-brand transition-colors">{t("nav.features")}</a>
-      <a href="#modules" className="hover:text-brand transition-colors">{t("nav.modules")}</a>
-      <a href="#faq" className="hover:text-brand transition-colors">{t("nav.faq")}</a>
-     </div>
+
 
      {/* Actions */}
      <div className="flex items-center gap-2">

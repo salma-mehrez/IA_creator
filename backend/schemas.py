@@ -102,6 +102,7 @@ class VideoUpdate(BaseModel):
     viral_score: Optional[int] = None
     notes: Optional[str] = None
     youtube_video_id: Optional[str] = None
+    brief_json: Optional[str] = None
 
 class VideoOut(BaseModel):
     id: int
@@ -126,6 +127,7 @@ class VideoOut(BaseModel):
     viral_score: int
     research_facts: Optional[str]
     notes: Optional[str]
+    brief_json: Optional[str]
     
     workspace_id: int
     created_at: datetime
@@ -330,3 +332,41 @@ class DashboardStatsOut(BaseModel):
     recent_videos: List[RecentVideoPerf]
     
     ai_insight_summary: str # "Bonjour, Sophie..."
+
+# ─── Publishing Hub Schemas ─────────────────────────────────
+
+class PublishRequest(BaseModel):
+    video_title: str
+    script_or_summary: Optional[str] = None
+    keywords: Optional[str] = None
+    language: Optional[str] = "fr"
+    image_model: Optional[str] = "flux"
+
+class GeneratedTitle(BaseModel):
+    title: str
+    ctr_score: int  # 0-100
+
+class TitleGenerationResponse(BaseModel):
+    titles: List[GeneratedTitle]
+
+class ThumbnailConcept(BaseModel):
+    concept_name: str
+    text_overlay: str
+    dominant_color: str
+    visual_subject: str
+    emotion: str
+    style: str
+    image_prompt_english: str
+    image_url: Optional[str] = None
+
+class ThumbnailResponse(BaseModel):
+    concepts: List[ThumbnailConcept]
+
+class GeneratedDescription(BaseModel):
+    intro: str
+    body: str
+    chapters: Optional[str] = None
+    hashtags: str
+    keywords: str
+    full_description: str
+

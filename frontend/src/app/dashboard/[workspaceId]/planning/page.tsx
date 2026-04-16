@@ -315,23 +315,9 @@ export default function PlanningPage() {
       <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
       <p className="text-subtle text-sm font-medium">{t("common.loading")}</p>
      </div>
-    ) : filtered.length === 0 ? (
-     <div className="bg-surface border-2 border-dashed border-border rounded-3xl py-24 flex flex-col items-center text-center px-6">
-      <div className="w-16 h-16 bg-brand-light rounded-2xl flex items-center justify-center mb-6 rotate-3">
-       <Calendar className="h-8 w-8 text-indigo-400" />
-      </div>
-      <h3 className="text-xl font-heading text-foreground-2 mb-2">{noVideosMsg}</h3>
-      <p className="text-subtle max-w-sm text-sm mb-8">
-       {search ? noResultsMsg : startAddingMsg}
-      </p>
-      {!search && (
-       <button onClick={openAdd} className="flex items-center gap-2 text-brand font-semibold text-sm hover:text-brand-hover transition-colors">
-        <Plus className="h-4 w-4" /> {addVideoLabel}
-       </button>
-      )}
-     </div>
-
-    ) : view ==="table" ? (
+    ) : (
+      <>
+        {view === "table" ? (
      /* REDESIGNED DASHBOARD VIEW */
      <div className="bg-surface border border-border rounded-3xl overflow-hidden shadow-2xl flex flex-col">
 
@@ -342,7 +328,7 @@ export default function PlanningPage() {
               <th rowSpan={2} className="text-center px-4 py-2 text-[10px] font-black uppercase tracking-widest text-subtle border-r border-border min-w-[50px]">#</th>
               <th rowSpan={2} className="text-left px-6 py-2 text-[10px] font-black uppercase tracking-widest text-subtle border-r border-border min-w-[250px]">VIDEO / Title</th>
               <th colSpan={2} className="text-center px-4 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-950/30 border-r border-border">DATES</th>
-              <th colSpan={5} className="text-center px-4 py-1 text-[10px] font-black uppercase tracking-widest text-amber-400 bg-amber-950/30 border-r border-border">VIDEO PROGRESS</th>
+              <th colSpan={5} className="text-center px-4 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-400 bg-indigo-950/30 border-r border-border">VIDEO PROGRESS</th>
               <th rowSpan={2} className="text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest text-subtle min-w-[150px]">Notes / Actions</th>
             </tr>
             <tr className="bg-slate-900 border-b border-border">
@@ -437,6 +423,19 @@ export default function PlanningPage() {
                 </tr>
               );
             })}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={10} className="px-6 py-20 text-center text-subtle italic border-r border-border-subtle bg-slate-900/10">
+                  <div className="flex flex-col items-center gap-3">
+                    <Calendar className="h-8 w-8 opacity-20" />
+                    <p>{noVideosMsg}</p>
+                    <button onClick={openAdd} className="text-brand text-xs font-bold hover:underline">
+                      + {addVideoLabel}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
           {/* SUMMARY FOOTER: RÉSUMÉ */}
           <tfoot>
@@ -565,10 +564,12 @@ export default function PlanningPage() {
          </div>
         </div>
        );
-      })}
-     </div>
-    )}
-   </div>
+       })}
+      </div>
+     )}
+    </>
+   )}
+  </div>
 
    {/* Modal: Add / Edit */}
    {isModalOpen && (

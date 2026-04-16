@@ -14,7 +14,7 @@ import {
  Sparkles,
  Video,
  Globe, Sun, Moon,
- Target
+ Target, Rocket
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fetchApi } from "@/lib/api";
@@ -52,9 +52,10 @@ export default function Sidebar({ isCollapsed = false }: { isCollapsed?: boolean
 
  const navItems = [
   { name: t("sidebar.control_center"), icon: LayoutDashboard, href:`/dashboard/${workspaceId}`, match:"/dashboard/" + workspaceId, exact: true },
+  { name: t("sidebar.planning_label"), icon: Calendar,         href:`/dashboard/${workspaceId}/planning`, match:"/planning" },
   { name: t("sidebar.topics_label"),   icon: Lightbulb,       href:`/dashboard/${workspaceId}/topics`,  match:"/topics" },
   { name: t("sidebar.script_label"),   icon: FileText,         href:`/dashboard/${workspaceId}/script`,  match:"/script" },
-  { name: t("sidebar.planning_label"), icon: Calendar,         href:`/dashboard/${workspaceId}/planning`, match:"/planning" },
+  { name: t("sidebar.publish_label"), icon: Rocket,         href:`/dashboard/${workspaceId}/publish`, match:"/publish" },
  ];
 
  return (

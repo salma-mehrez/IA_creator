@@ -73,7 +73,7 @@ class Video(Base):
     notes = Column(Text, nullable=True)
     
     # YouTube specific fields
-    youtube_video_id = Column(String, unique=True, index=True, nullable=True)
+    youtube_video_id = Column(String, index=True, nullable=True)
     published_at = Column(DateTime(timezone=True), nullable=True)
     view_count = Column(Integer, default=0)
     like_count = Column(Integer, default=0)
@@ -81,7 +81,8 @@ class Video(Base):
     thumbnail_url = Column(String, nullable=True)
     duration = Column(String, nullable=True)
     is_imported = Column(Boolean, default=False)
-
+    brief_json = Column(Text, nullable=True) # Persistent UI draft
+    
     workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -109,7 +110,7 @@ class YouTubeVideo(Base):
     __tablename__ = "youtube_videos"
 
     id = Column(Integer, primary_key=True, index=True)
-    youtube_video_id = Column(String, unique=True, index=True, nullable=False)
+    youtube_video_id = Column(String, index=True, nullable=False)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     transcription = Column(Text, nullable=True)

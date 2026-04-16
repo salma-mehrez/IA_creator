@@ -28,6 +28,48 @@ def _parse_json_response(text: str) -> Dict:
             print(f"CRITICAL ERROR: Could not parse JSON from response: {text[:200]}...")
             return {}
 
+def detect_channel_niche(channel_title: str, description: str, video_titles: List[str], language: str = "en") -> str:
+    """
+    Identifie automatiquement la niche d'une chaîne YouTube en analysant son profil et ses vidéos.
+    """
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        return "YouTube"
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-flash-latest')
+
+    vids_str = "\n".join([f"- {t}" for t in video_titles[:10]])
+    
+    prompt = f"""
+    Tu es un analyste expert de l'écosystème YouTube. 
+    Ta mission est d'identifier la NICHE (thématique principale) d'une chaîne YouTube à partir de ses données.
+    
+    ### DONNÉES DE LA CHAÎNE :
+    Nom : {channel_title}
+    Description : {description}
+    
+    ### TITRES DES DERNIÈRES VIDÉOS :
+    {vids_str}
+    
+    ### CONSIGNE :
+    1. Analyse sémantiquement le sujet principal traité par cette chaîne.
+    2. Identifie la niche en 1 ou 2 mots maximum (ex: Tech, Cuisine, Fitness, Business, Gaming, Voyage, Lifestyle, Education, etc.).
+    3. Réponds UNIQUEMENT avec le nom de la niche choisie (en langue {language}). Pas de phrases, pas de ponctuation.
+    
+    Langue de la réponse : {language}
+    """
+
+    try:
+        response = model.generate_content(prompt)
+        text = response.text.strip().strip('"').strip("'").strip()
+        # Prendre la première ligne si l'IA en génère plusieurs malgré la consigne
+        niche = text.split('\n')[0].strip()
+        return niche if niche else "YouTube"
+    except Exception as e:
+        print(f"ERROR Niche Detection Gemini: {str(e)}")
+        return "YouTube"
+
 def generate_script_scenes(title: str, description: str, niche: str, style_context: str = "", duration_minutes: int = 5, language: str = "en") -> List[Dict]:
     """
     Génère une liste de scènes pour une vidéo YouTube de DURÉE SPÉCIFIQUE en utilisant Gemini.
@@ -447,3 +489,166 @@ def generate_video_topics(niche: str, workspace_context: str = "", language: str
         print(f"CRITICAL ERROR Gemini: {str(e)}")
         return []
 
+# ─── Publishing Hub Generators ───────────────────────────────
+
+def generate_video_titles(video_title: str, niche: str, description: str = "", language: str = "en") -> List[Dict]:
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY non configurée")
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-flash-latest')
+
+    prompt = f"""
+    Tu es un expert en croissance YouTube (Thumbnail & Title specialist).
+    Génère 5 titres optimisés pour maximiser le taux de clic (CTR) pour une vidéo.
+
+    ### CONTEXTE :
+    Niche : {niche}
+    Titre de base/Idée : {video_title}
+    Contexte/Description : {description}
+    Langue obligatoire : {language}
+
+    ### RÈGLES POUR LES TITRES (MAX CTR) :
+    1. Utilise la curiosité, les enjeux, la nouveauté ou un résultat inattendu.
+    2. Court et percutant (idéalement 50 caractères maximum).
+    3. Pas trop putaclic mais assez intrigant pour cliquer.
+    4. Varie les styles : Liste, Curiosité, Éducatif, Controverse, etc.
+
+    ### FORMAT (JSON STRICT) :
+    {{
+      "titles": [
+        {{
+          "title": "Le titre suggéré",
+          "ctr_score": 85
+        }}
+      ]
+    }}
+    """
+    try:
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.GenerationConfig(
+                response_mime_type="application/json",
+                max_output_tokens=1024,
+            )
+        )
+        data = _parse_json_response(response.text)
+        return data.get("titles", [])
+    except Exception as e:
+        print(f"ERROR Titles Gemini: {str(e)}")
+        return [{"title": f"Erreur génération: {video_title}", "ctr_score": 50}]
+
+def generate_thumbnail_concepts(video_title: str, niche: str, language: str = "en", image_model: str = "flux") -> List[Dict]:
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY non configurée")
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-flash-latest')
+
+    prompt = f"""
+    Tu es un designer de miniatures YouTube d'élite et expert CTR (style MrBeast, Ali Abdaal, etc.).
+    Génère 3 concepts distincts de miniatures YouTube.
+
+    ### CONTEXTE :
+    Titre de la vidéo : {video_title}
+    Niche : {niche}
+    Langue obligatoire (pour le texte) : {language}
+
+    ### FORMAT (JSON STRICT) :
+    {{
+      "concepts": [
+        {{
+          "concept_name": "Nom du concept (ex: Curiosité extrème)",
+          "text_overlay": "Le REEL texte écrit sur l'image (max 3-4 mots puissants)",
+          "dominant_color": "Rouge, Bleu électrique, etc.",
+          "visual_subject": "Description claire de ce qu'on voit (ex: Moi, l'air choqué pointant vers l'écran avec un graphique en baisse)",
+          "emotion": "Qu'est ce que l'image transmet ? (Choc, Curiosité, Peur, etc.)",
+          "style": "Minimaliste, Réaliste, Cartoon, etc.",
+          "image_prompt_english": "A detailed DALL-E style prompt IN ENGLISH to generate this exact thumbnail natively. Must be extremely descriptive, including lighting, style, subject, and scene. Add 'Youtube thumbnail style' at the end."
+        }}
+      ]
+    }}
+    Sois PRÉCIS et CRÉATIF.
+    """
+    try:
+        import urllib.parse
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.GenerationConfig(
+                response_mime_type="application/json",
+                max_output_tokens=2048,
+            )
+        )
+        data = _parse_json_response(response.text)
+        concepts = data.get("concepts", [])
+        
+        # Inject the image URL for real generation using Pollinations AI
+        for concept in concepts:
+            # Create a descriptive prompt for the AI image generator
+            base_prompt = concept.get("image_prompt_english", f"Youtube thumbnail, {concept.get('visual_subject')}, {concept.get('style')} style, {concept.get('dominant_color')} dominant colors, showing {concept.get('emotion')}")
+            # Add text overlay request
+            if concept.get("text_overlay") and concept.get("text_overlay").lower() not in ["aucun", "none", ""]:
+                base_prompt += f", with bold text '{concept['text_overlay']}'"
+                
+            safe_prompt = urllib.parse.quote(base_prompt)
+            # Fetch directly from pollination
+            concept["image_url"] = f"https://image.pollinations.ai/prompt/{safe_prompt}?width=1280&height=720&nologo=true&model={image_model}"
+            
+        return concepts
+    except Exception as e:
+        print(f"ERROR Thumbnail Gemini: {str(e)}")
+        return []
+
+def generate_video_description(video_title: str, script_summary: str, niche: str, keywords: str = "", language: str = "en") -> Dict:
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY non configurée")
+
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-flash-latest')
+
+    prompt = f"""
+    Tu es un expert SEO YouTube. Rédige la description YouTube parfaite pour maximiser la visibilité.
+
+    ### CONTEXTE :
+    Titre vidéo : {video_title}
+    Où la vidéo parle de : {script_summary}
+    Niche de la chaîne : {niche}
+    Mots clés cibles (optionnel) : {keywords}
+    Langue : {language}
+
+    ### STRUCTURE REQUISE DE LA DESCRIPTION FINALE :
+    1. Une accroche forte contenant les mots clés.
+    2. Un court résumé de la valeur apportée par la vidéo (corps).
+    3. (Optionnel si applicable) Un modèle de chapitrage standardisé (0:00 Intro, etc.).
+    4. Recommandation d'autres vidéos (ex: Regarde aussi : [Lien vidéo]).
+    5. Liens d'affiliation/réseaux sociaux.
+    6. Mots clés et hashtags à la fin.
+
+    ### FORMAT (JSON STRICT) :
+    {{
+      "intro": "Accroche des 2 premières lignes",
+      "body": "Paragraphe principal décrivant la vidéo",
+      "chapters": "Chapitres (0:00 Intro\\n1:20 Le Problème etc.) (null si pas de chapitres)",
+      "hashtags": "#hashtag1 #hashtag2 #hashtag3",
+      "keywords": "Les mots clés SEO principaux sous forme de liste séparée par des virgules",
+      "full_description": "La description complète formattée, prête à être copiée collée avec tous les éléments (intro, corps, chapitres factices, liens placeholders, hashtags)"
+    }}
+    """
+    try:
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.GenerationConfig(
+                response_mime_type="application/json",
+                max_output_tokens=2048,
+            )
+        )
+        data = _parse_json_response(response.text)
+        return data
+    except Exception as e:
+        print(f"ERROR Description Gemini: {str(e)}")
+        return {{
+            "intro": "", "body": "", "chapters": "", "hashtags": "", "keywords": "", "full_description": f"Erreur de génération SEO: {str(e)}"
+        }}

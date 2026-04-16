@@ -79,12 +79,37 @@ def migrate():
         cur.execute("ALTER TABLE videos ADD COLUMN IF NOT EXISTS notes TEXT;")
         
         conn.commit()
-        print("✅ Migration terminée avec succès.")
+
+        # --- FIX: Vidéos manquantes (unicité par workspace) ---
+        print("Mise a jour des contraintes d'unicite pour les videos...")
+        # Pour youtube_videos
+        cur.execute("ALTER TABLE youtube_videos DROP CONSTRAINT IF EXISTS youtube_videos_youtube_video_id_key;")
+        # Note: on essaye l'unicite (video_id, workspace_id)
+        try:
+             cur.execute("ALTER TABLE youtube_videos ADD CONSTRAINT youtube_videos_video_workspace_uc UNIQUE (youtube_video_id, workspace_id);")
+        except:
+             conn.rollback()
+             conn = psycopg2.connect(DB_URL)
+             cur = conn.cursor()
+             print("[INFO] La contrainte d'unicite existait deja ou n'a pu etre cree pour youtube_videos.")
+
+        # Pour la table videos (idées / planning)
+        cur.execute("ALTER TABLE videos DROP CONSTRAINT IF EXISTS videos_youtube_video_id_key;")
+        try:
+            cur.execute("ALTER TABLE videos ADD CONSTRAINT videos_video_workspace_uc UNIQUE (youtube_video_id, workspace_id);")
+        except:
+             conn.rollback()
+             conn = psycopg2.connect(DB_URL)
+             cur = conn.cursor()
+             print("[INFO] La contrainte d'unicite existait deja sur la table videos.")
+
+        conn.commit()
+        print("[SUCCESS] Migration terminee avec succes.")
         
         cur.close()
         conn.close()
     except Exception as e:
-        print(f"❌ Erreur migration: {e}")
+        print(f"[ERROR] Erreur migration: {e}")
 
 if __name__ == "__main__":
     migrate()

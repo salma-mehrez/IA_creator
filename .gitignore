@@ -28,3 +28,10 @@ build/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Temporary & Scratch
+tmp*.py
+scratch/
+*.db
+*.sqlite3
+screenshots/

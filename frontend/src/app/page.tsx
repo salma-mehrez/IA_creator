@@ -6,7 +6,7 @@ import { useLanguage } from "@/lib/i18n";
 import {
  Sparkles, FileText, Zap, BarChart3, Lightbulb,
  Calendar, Coins, Rocket, ArrowRight, Target,
- Plus, Minus
+ Plus, Minus, Check, X
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -48,79 +48,181 @@ export default function Home() {
        <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
       </Link>
      </div>
+    </div>
+   </section>
 
-     {/* Stats */}
-     <div className="grid grid-cols-2 md:grid-cols-3 gap-8 max-w-3xl mx-auto py-12 border-y border-border bg-surface/70 backdrop-blur-sm rounded-3xl px-10 shadow-sm">
+
+   {/* Workflow Compact */}
+   <section id="workflow" className="py-24 bg-background border-y border-border relative overflow-hidden">
+    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+    <div className="max-w-7xl mx-auto px-6 relative z-10">
+     <div className="text-center mb-16 space-y-4">
+      <h2 className="text-4xl md:text-5xl font-heading mb-4 text-foreground">{t("landing.modules.title")}</h2>
+      <p className="text-muted max-w-xl mx-auto text-lg">{t("landing.modules.subtitle")}</p>
+     </div>
+     
+     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+      {/* Ligne de connexion au fond (desktop) */}
+      <div className="hidden lg:block absolute top-[44px] left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-border to-transparent -z-10" />
+
       {[
-       { num:"3", label: t("landing.stats.levels")},
-       { num:"4", label: t("landing.stats.modules")},
-       { num:"∞", label: t("landing.stats.channels")},
-      ].map(({ num, label }) => (
-       <div key={label} className={cn("flex flex-col items-center", num ==="∞"&&"col-span-2 md:col-span-1")}>
-        <div className="text-5xl md:text-6xl font-heading text-brand mb-2">{num}</div>
-        <div className="text-[10px] md:text-xs text-subtle uppercase tracking-[0.25em] font-bold">{label}</div>
+       { num: "01", icon: <BarChart3 className="w-6 h-6" />, title: t("landing.modules.m1.title"), desc: t("landing.modules.m1.desc"), color: "text-indigo-500 dark:text-indigo-400", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
+       { num: "02", icon: <Lightbulb className="w-6 h-6" />, title: t("landing.modules.m2.title"), desc: t("landing.modules.m2.desc"), color: "text-violet-500 dark:text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/20" },
+       { num: "03", icon: <FileText className="w-6 h-6" />, title: t("landing.modules.m3.title"), desc: t("landing.modules.m3.desc"), color: "text-blue-500 dark:text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+       { num: "04", icon: <Calendar className="w-6 h-6" />, title: t("landing.modules.m4.title"), desc: t("landing.modules.m4.desc"), color: "text-emerald-500 dark:text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+      ].map((step, i) => (
+       <div key={i} className="flex flex-col bg-surface/50 backdrop-blur-sm border border-border p-8 rounded-[2rem] hover:shadow-[0_0_30px_rgba(var(--brand),0.08)] hover:-translate-y-1 transition-all duration-300 group hover:border-brand/30">
+        <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-8 border transition-transform duration-500 group-hover:scale-110", step.bg, step.color, step.border)}>
+          {step.icon}
+        </div>
+        <div className="text-xs font-mono font-bold tracking-[0.2em] text-brand/70 mb-3">ÉTAPE {step.num}</div>
+        <h3 className="text-2xl font-heading text-foreground mb-3 leading-tight">{step.title}</h3>
+        <p className="text-sm text-muted leading-relaxed flex-1">{step.desc}</p>
        </div>
       ))}
      </div>
+
+     <div className="mt-16 flex justify-center">
+      <Link
+       href="/register"
+       className="bg-brand hover:bg-brand-hover text-white px-8 py-3 rounded-2xl font-semibold text-base transition-all flex items-center gap-2 group shadow-lg hover:shadow-brand/25 active:scale-95"
+      >
+       {t("landing.hero.cta")}
+       <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+      </Link>
+     </div>
     </div>
    </section>
 
-   {/* Présentation */}
-   <section id="presentation" className="py-28 bg-surface border-y border-border">
-    <div className="max-w-7xl mx-auto px-6">
-     <div className="flex flex-col md:flex-row gap-20 items-center">
-      <div className="flex-1">
-       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-light border border-brand-border text-brand text-xs font-semibold mb-6">
-        <Zap className="h-3 w-3" />
-        {t("landing.presentation.badge")}
-       </div>
-       <h2 className="text-4xl md:text-5xl font-heading mb-6 leading-tight text-foreground">
-        {t("landing.presentation.title")}
-       </h2>
-       <p className="text-muted text-lg mb-10 leading-relaxed">
-        {t("landing.presentation.subtitle")}
-       </p>
-       <div className="grid gap-6">
-        <OpportunityItem icon={<Zap className="text-brand" />} title={t("landing.presentation.item1.title")} desc={t("landing.presentation.item1.desc")} />
-        <OpportunityItem icon={<Target className="text-violet-500" />} title={t("landing.presentation.item2.title")} desc={t("landing.presentation.item2.desc")} />
-        <OpportunityItem icon={<Rocket className="text-emerald-500" />} title={t("landing.presentation.item3.title")} desc={t("landing.presentation.item3.desc")} />
-       </div>
+   {/* Comparison */}
+   <section id="comparison" className="py-24 bg-background">
+    <div className="max-w-5xl mx-auto px-6">
+     <div className="text-center mb-16 space-y-4">
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 text-orange-600 dark:text-orange-500 text-xs font-mono font-bold uppercase tracking-widest">
+        {t("landing.compare.badge")}
       </div>
+      <h2 className="text-4xl md:text-5xl font-heading mb-4 text-foreground">
+       <span className="text-foreground">TubeAI Creator</span> <span className="text-brand">vs</span> ChatGPT <span className="text-brand">vs</span> Claude
+      </h2>
+     </div>
 
-      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-5">
-       {[
-        { icon: <Coins className="h-9 w-9 text-amber-500" />, title: t("landing.presentation.card1.title"), desc: t("landing.presentation.card1.desc")},
-        { icon: <BarChart3 className="h-9 w-9 text-brand" />, title: t("landing.presentation.card2.title"), desc: t("landing.presentation.card2.desc"), offset: true },
-       ].map(({ icon, title, desc, offset }) => (
-        <div key={title} className={cn("bg-background p-8 rounded-3xl border border-border space-y-4 hover:border-brand-border hover:shadow-md transition-all group", offset &&"sm:mt-10")}>
-         {icon}
-         <h4 className="text-xl font-heading text-foreground">{title}</h4>
-         <p className="text-muted text-sm leading-relaxed">{desc}</p>
-        </div>
-       ))}
+     <div className="bg-surface border border-border rounded-[2rem] overflow-hidden shadow-xl">
+      <div className="overflow-x-auto">
+       <table className="w-full text-left border-collapse min-w-[700px]">
+        <thead>
+         <tr className="border-b border-border bg-surface-secondary">
+          <th className="p-6 font-heading text-lg font-semibold w-[40%] text-foreground">{t("landing.compare.feature")}</th>
+          <th className="p-6 font-heading text-lg font-semibold text-center w-[20%] text-foreground">
+           <div className="flex items-center justify-center gap-2"><Zap className="h-5 w-5 text-brand" /> TubeAI Creator</div>
+          </th>
+          <th className="p-6 font-heading text-lg font-semibold text-center w-[20%] opacity-60">ChatGPT</th>
+          <th className="p-6 font-heading text-lg font-semibold text-center w-[20%] opacity-60">Claude</th>
+         </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+         {[
+          { feature: t("landing.compare.f1"), tube: true, gpt: false, claude: false },
+          { feature: t("landing.compare.f2"), tube: true, gpt: false, claude: false },
+          { feature: t("landing.compare.f3"), tube: true, gpt: false, claude: false },
+          { feature: t("landing.compare.f4"), tube: true, gpt: false, claude: false },
+         ].map((row, i) => (
+          <tr key={i} className="hover:bg-surface-secondary/50 transition-colors">
+           <td className="p-6 font-medium text-foreground">{row.feature}</td>
+           <td className="p-6 text-center">
+            {row.tube ? <Check className="w-6 h-6 text-emerald-500 mx-auto" /> : <X className="w-6 h-6 text-rose-500 mx-auto opacity-50" />}
+           </td>
+           <td className="p-6 text-center">
+            {row.gpt ? <Check className="w-6 h-6 text-emerald-500 mx-auto" /> : <X className="w-6 h-6 text-rose-500 mx-auto opacity-50" />}
+           </td>
+           <td className="p-6 text-center">
+            {row.claude ? <Check className="w-6 h-6 text-emerald-500 mx-auto" /> : <X className="w-6 h-6 text-rose-500 mx-auto opacity-50" />}
+           </td>
+          </tr>
+         ))}
+         <tr className="hover:bg-surface-secondary/50 transition-colors">
+          <td className="p-6 font-medium text-foreground">{t("landing.compare.f5")}</td>
+          <td className="p-6 text-center font-bold text-emerald-500">{t("landing.compare.t5_tubeai")}</td>
+          <td className="p-6 text-center text-muted">{t("landing.compare.t5_gpt")}</td>
+          <td className="p-6 text-center text-muted">{t("landing.compare.t5_claude")}</td>
+         </tr>
+        </tbody>
+       </table>
       </div>
      </div>
     </div>
    </section>
 
-   {/* Modules */}
-   <section id="modules" className="py-28 bg-background">
+   {/* Explorez la Machine (Détails des Modèles) */}
+   <section id="features" className="py-28 bg-background">
     <div className="max-w-7xl mx-auto px-6">
-     <div className="text-center mb-20">
-      <h2 className="text-4xl md:text-6xl font-heading mb-4 text-foreground">{t("landing.modules.title")}</h2>
-      <p className="text-muted max-w-xl mx-auto text-base font-medium">{t("landing.modules.subtitle")}</p>
+     <div className="text-center mb-24 space-y-4">
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-secondary border border-border text-xs font-mono font-bold uppercase tracking-widest text-muted">
+        Intelligence Artificielle
+      </div>
+      <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading mb-4 text-foreground">{t("landing.features.title")}</h2>
+      <p className="text-muted max-w-xl mx-auto text-lg">{t("landing.features.subtitle")}</p>
      </div>
-     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <ModuleCard num="01" icon={<BarChart3 />} title={t("landing.modules.m1.title")} desc={t("landing.modules.m1.desc")} accent="indigo" />
-      <ModuleCard num="02" icon={<Lightbulb />} title={t("landing.modules.m2.title")} desc={t("landing.modules.m2.desc")} accent="violet" />
-      <ModuleCard num="03" icon={<FileText />} title={t("landing.modules.m3.title")} desc={t("landing.modules.m3.desc")} accent="blue" />
-      <ModuleCard num="04" icon={<Calendar />} title={t("landing.modules.m4.title")} desc={t("landing.modules.m4.desc")} accent="emerald" />
+     <div className="flex flex-col gap-10">
+      <ModelShowcase 
+       num="01" 
+       icon={<BarChart3 />} 
+       title={t("landing.features.m1.title")} 
+       desc={t("landing.features.m1.desc")} 
+       accent="indigo"
+       features={[
+         t("landing.features.m1.f1"),
+         t("landing.features.m1.f2"),
+         t("landing.features.m1.f3")
+       ]}
+       mediaSrc="/auditor_dashboard.png"
+      />
+      <ModelShowcase 
+       num="02" 
+       icon={<Lightbulb />} 
+       title={t("landing.features.m2.title")} 
+       desc={t("landing.features.m2.desc")} 
+       accent="violet" 
+       reverse 
+       features={[
+         t("landing.features.m2.f1"),
+         t("landing.features.m2.f2"),
+         t("landing.features.m2.f3")
+       ]}
+       mediaSrc="/strategist_chat.png"
+      />
+       <ModelShowcase 
+        num="03" 
+        icon={<FileText />} 
+        title={t("landing.features.m3.title")} 
+        desc={t("landing.features.m3.desc")} 
+        accent="blue"
+        features={[
+          t("landing.features.m3.f1"),
+          t("landing.features.m3.f2"),
+          t("landing.features.m3.f3")
+        ]}
+        mediaSrc="/script_editor.png"
+       />
+      <ModelShowcase 
+       num="04" 
+       icon={<Calendar />} 
+       title={t("landing.features.m4.title")} 
+       desc={t("landing.features.m4.desc")} 
+       accent="emerald" 
+       reverse 
+       features={[
+         t("landing.features.m4.f1"),
+         t("landing.features.m4.f2"),
+         t("landing.features.m4.f3")
+       ]}
+       mediaSrc="/maestro_planning.png"
+      />
      </div>
     </div>
    </section>
 
    {/* Formats */}
-   <section className="py-24 bg-surface border-y border-border">
+   <section className="py-24 bg-surface border-b border-border">
     <div className="max-w-7xl mx-auto px-6 text-center">
      <h2 className="text-4xl md:text-5xl font-heading mb-6 text-foreground">
       {t("landing.formats.title")} <span className="text-brand">{t("landing.formats.title_highlight")}</span>
@@ -221,13 +323,14 @@ export default function Home() {
 
 function OpportunityItem({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
  return (
-  <div className="flex gap-4 group">
-   <div className="flex-shrink-0 w-11 h-11 rounded-2xl bg-surface-secondary flex items-center justify-center border border-border group-hover:border-brand-border group-hover:bg-brand-light transition-all">
-    {icon}
+  <div className="flex gap-5 group p-4 -ml-4 rounded-2xl hover:bg-surface/50 border border-transparent hover:border-border/50 transition-all duration-300">
+   <div className="flex-shrink-0 w-14 h-14 rounded-[1.25rem] bg-background shadow-sm flex items-center justify-center border border-border group-hover:border-brand/30 group-hover:shadow-[0_0_20px_rgba(var(--brand),0.15)] transition-all duration-300 relative overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+    <span className="relative z-10 group-hover:scale-110 transition-transform duration-300">{icon}</span>
    </div>
-   <div>
-    <h3 className="text-foreground font-semibold text-base mb-1">{title}</h3>
-    <p className="text-muted text-sm leading-relaxed">{desc}</p>
+   <div className="flex flex-col justify-center">
+    <h3 className="text-foreground font-heading text-lg mb-1.5 group-hover:text-brand transition-colors">{title}</h3>
+    <p className="text-muted text-sm leading-relaxed max-w-sm">{desc}</p>
    </div>
   </div>
  );
@@ -240,16 +343,71 @@ const accentMap: Record<string, { bg: string; icon: string; border: string; num:
  emerald: { bg:"bg-emerald-50 dark:bg-emerald-950/30",icon:"text-emerald-600", border:"border-emerald-200 dark:border-emerald-800",num:"text-emerald-200 dark:text-emerald-900"},
 };
 
-function ModuleCard({ num, icon, title, desc, accent }: { num: string; icon: React.ReactNode; title: string; desc: string; accent: string }) {
+function ModelShowcase({ num, icon, title, desc, accent, reverse, features, mediaSrc }: { num: string; icon: React.ReactNode; title: string; desc: string; accent: string; reverse?: boolean; features?: string[]; mediaSrc?: string }) {
  const a = accentMap[accent] || accentMap.indigo;
  return (
-  <div className={cn("group p-8 rounded-3xl bg-surface border hover:shadow-lg transition-all hover:-translate-y-1 relative overflow-hidden h-full flex flex-col", a.border)}>
-   <div className={cn("absolute top-4 right-5 text-6xl font-heading pointer-events-none select-none", a.num)}>{num}</div>
-   <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center mb-6 border transition-transform group-hover:scale-110", a.bg, a.border)}>
-    <span className={a.icon}>{icon}</span>
+  <div className={cn("flex flex-col md:flex-row items-center gap-12 md:gap-20 py-10", reverse ? "md:flex-row-reverse" : "")}>
+   <div className="flex-1 space-y-6">
+    <div className={cn("inline-flex items-center px-3 py-1.5 rounded-md border text-xs font-mono font-bold tracking-widest", a.bg, a.border, a.icon)}>
+     [MODEL_{num}]
+    </div>
+    <div className="flex flex-col gap-4">
+      <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center border shadow-sm", a.bg, a.border, a.icon)}>
+        {icon}
+      </div>
+      <h3 className="text-3xl md:text-4xl font-heading text-foreground leading-tight">{title}</h3>
+    </div>
+    <p className="text-muted text-lg leading-relaxed">{desc}</p>
+    
+    {features && (
+      <ul className="space-y-3 pt-2">
+        {features.map((f, i) => (
+          <li key={i} className="flex items-start gap-3 text-foreground font-medium">
+            <div className={cn("mt-1 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0", a.bg)}>
+              <Check className="w-3 h-3" />
+            </div>
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+    )}
    </div>
-   <h3 className="text-xl font-heading text-foreground mb-3">{title}</h3>
-   <p className="text-muted text-sm leading-relaxed flex-1">{desc}</p>
+   <div className="flex-1 w-full">
+    <div className="aspect-[4/3] sm:aspect-video md:aspect-[4/3] lg:aspect-video rounded-3xl bg-surface border border-border shadow-2xl overflow-hidden relative group transition-all duration-500 hover:shadow-3xl hover:-translate-y-1">
+      {mediaSrc ? (
+        <div className="w-full h-full relative">
+          <img src={mediaSrc} alt={title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/40 to-transparent pointer-events-none" />
+        </div>
+      ) : (
+        /* Fake UI Mockup */
+        <div className="absolute inset-0 bg-gradient-to-br from-surface to-surface-secondary flex flex-col">
+          {/* Mockup Header */}
+          <div className="h-10 border-b border-border bg-background/50 flex items-center px-4 gap-2 backdrop-blur-sm">
+            <div className="w-3 h-3 rounded-full bg-red-400/80 shadow-inner" />
+            <div className="w-3 h-3 rounded-full bg-amber-400/80 shadow-inner" />
+            <div className="w-3 h-3 rounded-full bg-emerald-400/80 shadow-inner" />
+          </div>
+          {/* Mockup Content */}
+          <div className="flex-1 flex items-center justify-center p-6 sm:p-10 relative overflow-hidden">
+            <div className={cn("absolute -top-32 -right-32 w-80 h-80 rounded-full blur-[100px] opacity-30 pointer-events-none transition-all duration-700 group-hover:scale-110", a.bg)} />
+            <div className={cn("absolute -bottom-32 -left-32 w-80 h-80 rounded-full blur-[100px] opacity-30 pointer-events-none transition-all duration-700 group-hover:scale-110", a.bg)} />
+            
+            <div className="w-full h-full border border-border/60 rounded-2xl bg-background/80 backdrop-blur-md shadow-sm flex flex-col items-center justify-center p-6 gap-4 relative z-10 transition-transform duration-500 group-hover:scale-[1.02]">
+              <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center bg-background border shadow-md", a.border, a.icon)}>
+                {icon}
+              </div>
+              <div className="text-center">
+                <div className="font-heading text-foreground text-xl mb-2">{title}</div>
+                <div className="w-32 h-2 rounded-full bg-border mx-auto mb-2" />
+                <div className="w-48 h-2 rounded-full bg-border/50 mx-auto" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+   </div>
   </div>
  );
 }
