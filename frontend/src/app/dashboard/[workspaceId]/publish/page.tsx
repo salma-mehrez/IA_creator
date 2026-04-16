@@ -81,14 +81,14 @@ export default function PublishHub() {
           method: "POST",
           body: JSON.stringify(payload)
         });
-        if (res.data) setTitles(res.data.titles);
+        if (res.data) setTitles((res.data as any).titles);
       } 
       else if (activeTab === "thumbnails") {
         const res = await fetchApi(`/workspaces/${workspaceId}/generate-thumbnail-concepts`, {
           method: "POST",
           body: JSON.stringify(payload)
         });
-        if (res.data) setThumbnails(res.data.concepts);
+        if (res.data) setThumbnails((res.data as any).concepts);
       }
       else if (activeTab === "seo") {
         const res = await fetchApi(`/workspaces/${workspaceId}/generate-description`, {

@@ -1368,6 +1368,12 @@ export const translations = {
   "landing.stats.levels":"Niveles de app",
   "landing.stats.modules":"Módulos IA / canal",
   "landing.stats.channels":"Canales por cuenta",
+  "dashboard.growth.title":"Crecimiento y Estrategia",
+  "dashboard.growth.next_milestone":"Próximo Objetivo",
+  "dashboard.growth.active_projects":"Proyectos Activos",
+  "dashboard.growth.top_video":"Top Contenido",
+  "dashboard.growth.insight":"Consejo Estratégico",
+  "dashboard.growth.subs_remaining":"suscriptores restantes",
   "landing.presentation.badge":"Una oportunidad única",
   "landing.presentation.title":"Transforma tu flujo creativo",
   "landing.presentation.subtitle":"Los creadores se enfrentan a desafíos constantes: encontrar ideas, escribir guiones, mantener un ritmo. TubeAI Creator revoluciona este proceso.",
@@ -1391,6 +1397,39 @@ export const translations = {
   "landing.modules.m3.desc":"Guiones completos basados en la audiencia, la narración y los criterios SEO.",
   "landing.modules.m4.title":"Planificación de producción",
   "landing.modules.m4.desc":"Kanban intuitivo para seguir cada vídeo desde la idea hasta la publicación.",
+  "landing.features.title":"Explora la Máquina",
+  "landing.features.subtitle":"Sumérgete en detalle en cada uno de nuestros modelos especializados.",
+  "landing.features.m1.title":"El Auditor / Análisis",
+  "landing.features.m1.desc":"Conecta tu canal y deja que la IA realice una auditoría profunda. Conoce tus puntuaciones, entiende tus éxitos o fracasos pasados y obtén recomendaciones inmediatas.",
+  "landing.features.m1.f1":"Escaneo de Retención: La IA detecta exactamente dónde se van los espectadores.",
+  "landing.features.m1.f2":"Rayos X Competitivos: Sifona las métricas ocultas de cualquier canal.",
+  "landing.features.m1.f3":"Puntuación de Viralidad: Auditoría clara de por qué tus vídeos explotan o no.",
+  "landing.features.m2.title":"El Estratega / Chat",
+  "landing.features.m2.desc":"Se acabó la página en blanco. Habla con tu asistente dedicado a YouTube. Encuentra conceptos 'Outliers', refina tus ángulos y asegura tu próxima idea viral.",
+  "landing.features.m2.f1":"Brainstorming Infinito: Ideas de vídeo ilimitadas a demanda.",
+  "landing.features.m2.f2":"Ángulo Viral: Refina tus ganchos para disparar tu CTR.",
+  "landing.features.m2.f3":"Memoria de Canal: La IA conoce a tu audiencia y tus éxitos pasados.",
+  "landing.features.m3.title":"El Editor / Guiones",
+  "landing.features.m3.desc":"Transforma tus ideas brutas en guiones listos para grabar. La IA integra bucles psicológicos, buen ritmo y conserva tu tono (Brand Voice) único.",
+  "landing.features.m3.f1":"Narración Hipnótica: Guiones estructurados para máxima retención.",
+  "landing.features.m3.f2":"Ganchos Psicológicos: Ganchos estratégicos colocados por la IA.",
+  "landing.features.m3.f3":"Sincronización de Brand Voice: La IA se adapta a tu tono y estilo único.",
+  "landing.features.m4.title":"El Maestro / Planificación",
+  "landing.features.m4.desc":"No te pierdas nunca más una publicación. Organiza todo tu flujo de trabajo desde el primer borrador hasta la sala de montaje.",
+  "landing.features.m4.f1":"Pipeline de Producción: Gestiona tus vídeos desde la idea bruta hasta la publicación final.",
+  "landing.features.m4.f2":"Frecuencia Optimizada: Recordatorios inteligentes para no fallar nunca un upload.",
+  "landing.features.m4.f3":"Centralización Total: Tus guiones y datos reunidos en un solo dashboard.",
+  "landing.compare.badge":"SOMOS DIFERENTES",
+  "landing.compare.title":"TubeAI Creator vs ChatGPT vs Claude",
+  "landing.compare.feature":"Funcionalidad",
+  "landing.compare.f1":"Generador de ideas 'Outliers' (YouTube)",
+  "landing.compare.f2":"Analyse de statistiques YouTube en direct",
+  "landing.compare.f3":"Espace de production (Kanban) intégré",
+  "landing.compare.f4":"Ganchos psicológicos y Retención",
+  "landing.compare.f5":"Tiempo hasta el primer Guion Viral",
+  "landing.compare.t5_tubeai":"⚡ 5 minutos",
+  "landing.compare.t5_gpt":"⏳ 1 hora",
+  "landing.compare.t5_claude":"⏳ 1 hora",
   "landing.formats.title":"Todos los formatos,",
   "landing.formats.title_highlight":"todos los nichos",
   "landing.formats.subtitle":"TubeAI Creator admite todo tipo de contenido: canales faceless, vlogs, tutoriales, podcasts o educativos.",
@@ -1423,12 +1462,6 @@ export const translations = {
   "landing.footer.faq":"FAQ",
   "landing.footer.login":"Iniciar sesión",
   "landing.footer.rights":"© 2026 TubeAI Creator — Todos los derechos reservados.",
-  "dashboard.growth.title":"Crecimiento y Estrategia",
-  "dashboard.growth.next_milestone":"Próximo Objetivo",
-  "dashboard.growth.active_projects":"Proyectos Activos",
-  "dashboard.growth.top_video":"Top Contenido",
-  "dashboard.growth.insight":"Consejo Estratégico",
-  "dashboard.growth.subs_remaining":"suscriptores restantes",
   "sidebar.control_center":"Centro de Control",
   "sidebar.topics_label":"Generador de Ideas",
   "sidebar.script_label":"Editor de Scripts",
@@ -1515,13 +1548,13 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
  };
 
  const t = (key: TranslationKeys): string => {
-  return translations[language][key] || translations["en"][key] || key;
+  return (translations[language] as any)[key] || (translations["en"] as any)[key] || (key as string);
  };
 
  if (!mounted) {
    // During SSR and first client render, use default "en" to match server
    return (
-     <LanguageContext.Provider value={{ language:"en", setLanguage, t: (key) => translations["en"][key] || key }}>
+     <LanguageContext.Provider value={{ language:"en", setLanguage, t: (key) => (translations["en"] as any)[key] || (key as string) }}>
       <div style={{ visibility:"hidden"}}>{children}</div>
      </LanguageContext.Provider>
    );
