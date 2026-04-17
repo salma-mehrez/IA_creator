@@ -107,7 +107,7 @@ export default function TopicsPage() {
 
  const handleDeleteConversation = async (e: React.MouseEvent, id: number) => {
   e.stopPropagation();
-  if (!confirm(t("common.confirm_delete") || "Delete this conversation?")) return;
+  if (!confirm(t("dash.common.confirm_delete") || "Delete this conversation?")) return;
   
   const res = await fetchApi(`/workspaces/${workspaceId}/conversations/${id}`, { method: "DELETE" });
   if (!res.error) {

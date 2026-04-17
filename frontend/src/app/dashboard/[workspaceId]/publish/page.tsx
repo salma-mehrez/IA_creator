@@ -92,7 +92,7 @@ export default function PublishHub() {
 
   const handleDeleteProject = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
-    if (!confirm(t("common.confirm_delete") || "Supprimer cet historique ?")) return;
+    if (!confirm(t("dash.common.confirm_delete") || "Supprimer cet historique ?")) return;
     
     const res = await fetchApi(`/workspaces/${workspaceId}/publish/projects/${id}`, { method: "DELETE" });
     if (!res.error) {
