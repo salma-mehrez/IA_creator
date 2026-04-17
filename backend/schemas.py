@@ -239,18 +239,29 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     messages: List[ChatMessage]
     language: Optional[str] = "en"
+    conversation_id: Optional[int] = None
 
 class ChatResponse(BaseModel):
     message: str
     suggested_title: Optional[str] = None
     viral_score: Optional[int] = None
     add_to_planning: bool = False
+    conversation_id: Optional[int] = None
 
 class QuickSuggestion(BaseModel):
     title: str
     why: str
     viral_score: int
     format: str
+
+class BrainstormingConversationOut(BaseModel):
+    id: int
+    title: Optional[str] = None
+    workspace_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 class BrainstormingMessageOut(BaseModel):
     id: int
@@ -259,6 +270,7 @@ class BrainstormingMessageOut(BaseModel):
     suggested_title: Optional[str] = None
     viral_score: Optional[int] = None
     add_to_planning: bool = False
+    conversation_id: Optional[int] = None
     created_at: datetime
 
     class Config:
@@ -369,4 +381,28 @@ class GeneratedDescription(BaseModel):
     hashtags: str
     keywords: str
     full_description: str
+
+class PublishProjectOut(BaseModel):
+    id: int
+    video_title: str
+    script_summary: Optional[str] = None
+    keywords: Optional[str] = None
+    language: str
+    image_model: str
+    results_json: Optional[str] = None
+    workspace_id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class PublishProjectSave(BaseModel):
+    id: Optional[int] = None # If provided, update existing
+    video_title: str
+    script_summary: Optional[str] = None
+    keywords: Optional[str] = None
+    language: str
+    image_model: str
+    results_json: Optional[str] = None
 

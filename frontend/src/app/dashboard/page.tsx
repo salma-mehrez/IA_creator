@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, ArrowUpRight, Sparkles, Loader2, Trash2, Tv, AlertTriangle } from "lucide-react";
+import { Plus, ArrowUpRight, Sparkles, Loader2, Trash2, Tv, AlertTriangle, Rocket } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { useLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -64,26 +64,25 @@ function WorkspaceCard({ ws, onDelete, openLabel, deleteLabel, confirmLabel, yes
      )}
     </div>
 
-    <h3 className="text-base font-bold text-foreground mb-0.5 tracking-tight group-hover:text-brand transition-colors line-clamp-1">
+    <h3 className="text-base font-bold text-foreground mb-5 tracking-tight group-hover:text-brand transition-colors line-clamp-1">
      {ws.name}
     </h3>
-    <div className="flex items-center gap-1.5 mb-5">
-     <span className="text-[10px] font-semibold text-muted bg-surface-secondary px-2 py-0.5 rounded-md border border-border-subtle">
-      YouTube
-     </span>
-     {ws.niche && (
-      <>
-       <span className="text-border-strong">·</span>
-       <span className="text-[10px] font-medium text-subtle truncate">{ws.niche}</span>
-      </>
-     )}
-    </div>
 
     <div className="mt-auto">
-     <Link href={`/dashboard/${ws.id}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand hover:text-brand-hover transition-colors group/link">
-      {openLabel}
-      <ArrowUpRight className="h-3.5 w-3.5 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
-     </Link>
+     <div className="flex items-center justify-between mt-auto">
+      <Link href={`/dashboard/${ws.id}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand hover:text-brand-hover transition-colors group/link">
+       {openLabel}
+       <ArrowUpRight className="h-3.5 w-3.5 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
+      </Link>
+      
+      <Link 
+        href={`/dashboard/${ws.id}/publish`} 
+        className="w-8 h-8 rounded-xl bg-brand/5 text-brand flex items-center justify-center hover:bg-brand hover:text-white transition-all shadow-sm border border-brand/10 group/pub"
+        title="Direct Publish Toolkit"
+      >
+        <Rocket className="h-4 w-4" />
+      </Link>
+     </div>
     </div>
    </div>
   </div>

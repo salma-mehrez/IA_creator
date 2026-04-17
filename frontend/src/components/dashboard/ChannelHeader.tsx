@@ -82,11 +82,6 @@ export default function ChannelHeader({
               <div className="flex items-center gap-3">
                 <h2 className="text-3xl font-black text-foreground tracking-tighter leading-none">{workspace?.name || "Canal Pro"}</h2>
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-subtle uppercase tracking-widest">
-                <span>@{workspace?.channel_id || "handle"}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-border" />
-                <span>{workspace?.niche || "YouTube"}</span>
-              </div>
             </div>
           </div>
 

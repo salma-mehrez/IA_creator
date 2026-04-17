@@ -58,6 +58,36 @@ def migrate():
 
         # Création de la table scenes
         cur.execute("""
+            CREATE TABLE IF NOT EXISTS brainstorming_messages (
+                id SERIAL PRIMARY KEY,
+                role VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                suggested_title VARCHAR(255),
+                viral_score INTEGER,
+                add_to_planning BOOLEAN DEFAULT FALSE,
+                workspace_id INTEGER REFERENCES workspaces(id),
+                conversation_id INTEGER REFERENCES brainstorming_conversations(id),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # Création de la table publish_projects
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS publish_projects (
+                id SERIAL PRIMARY KEY,
+                video_title VARCHAR(255) NOT NULL,
+                script_summary TEXT,
+                keywords TEXT,
+                language VARCHAR(255) DEFAULT 'fr',
+                image_model VARCHAR(255) DEFAULT 'flux',
+                results_json TEXT,
+                workspace_id INTEGER REFERENCES workspaces(id),
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cur.execute("""
             CREATE TABLE IF NOT EXISTS scenes (
                 id SERIAL PRIMARY KEY,
                 "order" INTEGER NOT NULL,
@@ -102,6 +132,19 @@ def migrate():
              conn = psycopg2.connect(DB_URL)
              cur = conn.cursor()
              print("[INFO] La contrainte d'unicite existait deja sur la table videos.")
+
+        # Création de la table brainstorming_conversations
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS brainstorming_conversations (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR,
+                workspace_id INTEGER REFERENCES workspaces(id) ON DELETE CASCADE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+
+        # Ajouter conversation_id à brainstorming_messages
+        cur.execute("ALTER TABLE brainstorming_messages ADD COLUMN IF NOT EXISTS conversation_id INTEGER REFERENCES brainstorming_conversations(id) ON DELETE CASCADE;")
 
         conn.commit()
         print("[SUCCESS] Migration terminee avec succes.")

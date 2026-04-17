@@ -209,6 +209,45 @@ export default function ScriptPage() {
   return () => clearTimeout(timer);
  }, [brief, ageRange, selectedHooks, selected?.id]);
 
+ // --- STATE PERSISTENCE ---
+ const SCRIPT_STORAGE_KEY = `last_script_id_${workspaceId}`;
+ const STEP_STORAGE_KEY = `last_script_step_${workspaceId}`;
+
+ // Save selection and step to localStorage
+ useEffect(() => {
+  if (typeof window === "undefined") return;
+  if (selected) {
+   localStorage.setItem(SCRIPT_STORAGE_KEY, selected.id.toString());
+   localStorage.setItem(STEP_STORAGE_KEY, step.toString());
+  }
+ }, [selected, step, SCRIPT_STORAGE_KEY, STEP_STORAGE_KEY]);
+
+ // Restore selection on mount (after videos are loaded)
+ useEffect(() => {
+  if (typeof window === "undefined" || !videos.length || selected) return;
+  
+  const savedId = localStorage.getItem(SCRIPT_STORAGE_KEY);
+  const savedStep = localStorage.getItem(STEP_STORAGE_KEY);
+  
+  if (savedId) {
+   const vid = videos.find(v => v.id === parseInt(savedId));
+   if (vid) {
+    handleSelect(vid).then(() => {
+     if (savedStep) setStep(parseInt(savedStep) as Step);
+    });
+   }
+  }
+ }, [videos, SCRIPT_STORAGE_KEY, STEP_STORAGE_KEY]);
+
+ const handleClose = () => {
+  setSelected(null);
+  if (typeof window !== "undefined") {
+   localStorage.removeItem(SCRIPT_STORAGE_KEY);
+   localStorage.removeItem(STEP_STORAGE_KEY);
+  }
+ };
+ // -------------------------
+
  const loadVideos = useCallback(async () => {
   setLoading(true);
   const res = await fetchApi(`/workspaces/${workspaceId}/planning-vids`);
@@ -439,6 +478,13 @@ export default function ScriptPage() {
       {/* Topbar */}
       <div className="px-8 py-4 bg-surface border-b border-border flex items-center justify-between">
        <div className="flex items-center gap-3 min-w-0">
+        <button 
+         onClick={handleClose}
+         className="p-2 hover:bg-surface-secondary rounded-lg text-muted hover:text-foreground transition-all flex-shrink-0"
+         title={language === "fr" ? "Retour à la liste" : "Back to list"}
+        >
+         <ArrowLeft className="h-5 w-5" />
+        </button>
         <select
          value={selected.id}
          onChange={(e) => {

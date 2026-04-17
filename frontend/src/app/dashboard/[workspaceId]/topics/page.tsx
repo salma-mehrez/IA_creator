@@ -3,8 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import {
+ MessageSquare, History, Trash2, 
  Lightbulb, Sparkles, Plus, Loader2, CheckCircle2,
- TrendingUp, Send, Bot, User, RefreshCw, Zap
+ TrendingUp, Send, Bot, User, RefreshCw, Zap,
+ ChevronRight, MoreVertical
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fetchApi } from "@/lib/api";
@@ -20,6 +22,12 @@ interface ChatMessage {
  add_to_planning?: boolean;
 }
 
+interface Conversation {
+ id: number;
+ title: string;
+ created_at: string;
+}
+
 interface QuickSuggestion {
  title: string;
  why: string;
@@ -31,20 +39,19 @@ export default function TopicsPage() {
  const { workspaceId } = useParams();
  const { language, t } = useLanguage();
 
- const [messages, setMessages] = useState<ChatMessage[]>([
-  {
-   role:"assistant",
-   content: t("topics.chat.welcome")
-  }
- ]);
+ const [conversations, setConversations] = useState<Conversation[]>([]);
+ const [activeConvId, setActiveConvId] = useState<number | null>(null);
+ const [messages, setMessages] = useState<ChatMessage[]>([]);
  const [input, setInput] = useState("");
  const [chatLoading, setChatLoading] = useState(false);
+ const [historyLoading, setHistoryLoading] = useState(false);
  const chatBottomRef = useRef<HTMLDivElement>(null);
 
  const [suggestions, setSuggestions] = useState<QuickSuggestion[]>([]);
  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
 
  const [success, setSuccess] = useState("");
+ const [sidebarOpen, setSidebarOpen] = useState(true);
 
  useEffect(() => {
   chatBottomRef.current?.scrollIntoView({ behavior:"smooth"});
@@ -57,17 +64,57 @@ export default function TopicsPage() {
   setSuggestionsLoading(false);
  };
 
- const loadChatHistory = async () => {
-  const res = await fetchApi(`/workspaces/${workspaceId}/chat-history`);
-  if (res.data && (res.data as ChatMessage[]).length > 0) {
-   setMessages(res.data as ChatMessage[]);
+ const loadConversations = async () => {
+  const res = await fetchApi(`/workspaces/${workspaceId}/conversations`);
+  if (res.data) {
+   const convs = res.data as Conversation[];
+   setConversations(convs);
+   // If no active conversation, pick the latest one or leave blank
+   if (!activeConvId && convs.length > 0) {
+    // We don't auto-select to leave room for "New Chat" state
+   }
   }
+ };
+
+ const loadChatHistory = async (convId: number) => {
+  setHistoryLoading(true);
+  const res = await fetchApi(`/workspaces/${workspaceId}/conversations/${convId}/messages`);
+  if (res.data) {
+   setMessages(res.data as ChatMessage[]);
+  } else {
+   setMessages([]);
+  }
+  setHistoryLoading(false);
  };
 
  useEffect(() => {
   loadSuggestions();
-  loadChatHistory();
+  loadConversations();
  }, [workspaceId]);
+
+ useEffect(() => {
+  if (activeConvId) {
+   loadChatHistory(activeConvId);
+  } else {
+   setMessages([{ role: "assistant", content: t("topics.chat.welcome") }]);
+  }
+ }, [activeConvId]);
+
+ const handleNewChat = () => {
+  setActiveConvId(null);
+  setMessages([{ role: "assistant", content: t("topics.chat.welcome") }]);
+ };
+
+ const handleDeleteConversation = async (e: React.MouseEvent, id: number) => {
+  e.stopPropagation();
+  if (!confirm(t("common.confirm_delete") || "Delete this conversation?")) return;
+  
+  const res = await fetchApi(`/workspaces/${workspaceId}/conversations/${id}`, { method: "DELETE" });
+  if (!res.error) {
+   setConversations(prev => prev.filter(c => c.id !== id));
+   if (activeConvId === id) handleNewChat();
+  }
+ };
 
  const showSuccess = (msg: string) => {
   setSuccess(msg);
@@ -79,6 +126,7 @@ export default function TopicsPage() {
   const userMsg: ChatMessage = { role:"user", content: input };
   const newMessages = [...messages, userMsg];
   setMessages(newMessages);
+  const currentInput = input;
   setInput("");
   setChatLoading(true);
 
@@ -86,7 +134,8 @@ export default function TopicsPage() {
    method:"POST",
    body: JSON.stringify({
     messages: newMessages.map(m => ({ role: m.role, content: m.content })),
-    language
+    language,
+    conversation_id: activeConvId
    })
   });
 
@@ -99,6 +148,12 @@ export default function TopicsPage() {
     viral_score: data.viral_score,
     add_to_planning: data.add_to_planning
    }]);
+
+   // If a new conversation was created on the backend, update our state
+   if (!activeConvId && data.conversation_id) {
+    setActiveConvId(data.conversation_id);
+    loadConversations(); // Refresh list to see the new one
+   }
   } else {
    setMessages(prev => [...prev, {
     role:"assistant",
@@ -148,11 +203,84 @@ export default function TopicsPage() {
     )}
    </header>
 
-   {/* 2-column layout */}
+   {/* 3-column layout */}
    <div className="flex flex-1 overflow-hidden">
 
-    {/* LEFT: Chatbot */}
-    <div className="flex-1 flex flex-col border-r border-border bg-surface min-w-0">
+    {/* LEFT: Conversations Sidebar */}
+    <div className={cn(
+     "bg-surface border-r border-border transition-all duration-300 flex flex-col",
+     sidebarOpen ? "w-80" : "w-0 overflow-hidden"
+    )}>
+     <div className="p-4 border-b border-border">
+      <button
+       onClick={handleNewChat}
+       className="w-full flex items-center justify-center gap-2 bg-brand/10 hover:bg-brand/20 text-brand py-3 px-4 rounded-xl border border-brand/20 font-bold transition-all text-sm group"
+      >
+       <Plus className="h-4 w-4 group-hover:rotate-90 transition-transform" />
+       {language === "fr" ? "Nouvelle Discussion" : "New Chat"}
+      </button>
+     </div>
+
+     <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div className="p-2 space-y-1">
+       <div className="px-3 py-2">
+        <span className="text-[10px] font-black uppercase tracking-widest text-subtle/60 flex items-center gap-2">
+         <History className="h-3 w-3" /> {language === "fr" ? "Historique" : "Chat History"}
+        </span>
+       </div>
+       
+       {conversations.length === 0 ? (
+        <div className="p-8 text-center">
+         <MessageSquare className="h-8 w-8 text-subtle/20 mx-auto mb-2" />
+         <p className="text-xs text-subtle/60">{language === "fr" ? "Aucune conversation" : "No history yet"}</p>
+        </div>
+       ) : conversations.map(conv => (
+        <button
+         key={conv.id}
+         onClick={() => setActiveConvId(conv.id)}
+         className={cn(
+          "w-full flex items-center justify-between p-3 rounded-xl transition-all group relative text-left",
+          activeConvId === conv.id ? "bg-brand text-white shadow-lg shadow-brand/20" : "hover:bg-surface-secondary text-foreground-2"
+         )}
+        >
+         <div className="flex items-center gap-3 min-w-0">
+          <MessageSquare className={cn("h-4 w-4 flex-shrink-0", activeConvId === conv.id ? "text-white" : "text-brand")} />
+          <div className="flex flex-col min-w-0">
+           <span className="text-sm font-semibold truncate pr-4">
+            {conv.title || (language === "fr" ? "Sans titre" : "No title")}
+           </span>
+           <span className={cn("text-[10px] opacity-60 font-medium", activeConvId === conv.id ? "text-white/80" : "text-subtle")}>
+            {new Date(conv.created_at).toLocaleDateString(language === "fr" ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short' })}
+           </span>
+          </div>
+         </div>
+         
+         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+           <button 
+             onClick={(e) => handleDeleteConversation(e, conv.id)}
+             className={cn(
+               "p-1.5 rounded-lg transition-all",
+               activeConvId === conv.id ? "hover:bg-white/20 text-white" : "hover:bg-red-50 text-subtle hover:text-red-500"
+             )}
+           >
+            <Trash2 className="h-3.5 w-3.5" />
+           </button>
+         </div>
+        </button>
+       ))}
+      </div>
+     </div>
+    </div>
+
+    {/* MIDDLE: Chatbot */}
+    <div className="flex-1 flex flex-col border-r border-border bg-surface min-w-0 relative">
+     {/* Toggle Sidebar Button */}
+     <button 
+      onClick={() => setSidebarOpen(!sidebarOpen)}
+      className="absolute -left-3 top-1/2 -translate-y-1/2 z-40 bg-white border border-border rounded-full p-1.5 shadow-md hover:scale-110 transition-all text-subtle active:scale-95"
+     >
+      <ChevronRight className={cn("h-3 w-3 transition-transform", sidebarOpen && "rotate-180")} />
+     </button>
      <div className="px-6 py-3 border-b border-border-subtle flex items-center justify-between">
       <div className="flex items-center gap-2">
        <Bot className="h-4 w-4 text-brand" />
@@ -164,8 +292,23 @@ export default function TopicsPage() {
      </div>
 
      {/* Messages */}
-     <div className="flex-1 overflow-y-auto p-6 space-y-4">
-      {messages.map((msg, i) => (
+     <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      {historyLoading ? (
+       <div className="flex flex-col items-center justify-center h-full gap-4">
+        <Loader2 className="h-8 w-8 text-brand animate-spin" />
+        <p className="text-sm text-subtle font-medium">{language === "fr" ? "Chargement des messages..." : "Loading messages..."}</p>
+       </div>
+      ) : messages.length === 0 ? (
+       <div className="flex flex-col items-center justify-center h-full text-center max-w-sm mx-auto space-y-4">
+        <div className="w-16 h-16 bg-brand-light rounded-[2rem] flex items-center justify-center">
+          <Bot className="h-8 w-8 text-indigo-400" />
+        </div>
+        <div>
+          <h3 className="text-lg font-heading text-foreground-2 mb-2">{t("topics.chat.welcome_title") || "Comment puis-je t'aider ?"}</h3>
+          <p className="text-sm text-subtle">{language === "fr" ? "Pose-moi une question ou décris une idée pour commencer à brainstormer." : "Ask me anything or describe an idea to start brainstorming."}</p>
+        </div>
+       </div>
+      ) : messages.map((msg, i) => (
        <div key={i} className={cn("flex gap-3", msg.role ==="user"?"flex-row-reverse":"flex-row")}>
         <div className={cn(
         "w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0",

@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
-import { Lightbulb, FileText, Search, Layers, List, LayoutGrid, Download, ChevronLeft, ChevronRight, Video } from "lucide-react";
+import Link from "next/link";
+import { Lightbulb, FileText, Search, Layers, List, LayoutGrid, Download, ChevronLeft, ChevronRight, Video, Rocket, Clock, ArrowRight } from "lucide-react";
 import { fetchApi } from "@/lib/api";
 import { useLanguage } from "@/lib/i18n";
 
@@ -31,6 +32,7 @@ export default function MasterDashboard() {
     const [stats, setStats] = useState<any>(null);
     const [auditResult, setAuditResult] = useState<any>(null);
     const [videos, setVideos] = useState<any[]>([]);
+    const [recentPublish, setRecentPublish] = useState<any[]>([]);
 
     // UI states
     const [loading, setLoading] = useState(true);
@@ -80,6 +82,12 @@ export default function MasterDashboard() {
         if (!statsRes.error) setStats(statsRes.data);
         if (!auditRes.error) setAuditResult(auditRes.data);
         if (!vidRes.error) setVideos(vidRes.data as any[]);
+
+        // Fetch recent publish projects
+        const pubRes = await fetchApi(`/workspaces/${workspaceId}/publish/projects`);
+        if (!pubRes.error) {
+            setRecentPublish((pubRes.data as any[]).slice(0, 3));
+        }
 
         setLoading(false);
         return vidRes.data as any[];
@@ -266,7 +274,7 @@ export default function MasterDashboard() {
                 />
 
                 {/* 2. CORE ACTIONS */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <ModuleHero
                       title={t("dash.module.topics.title")}
                       description={t("dash.module.topics.desc")}
@@ -283,7 +291,62 @@ export default function MasterDashboard() {
                       colorClass="bg-indigo-600"
                       iconColor="text-white"
                     />
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-brand/20 to-violet-500/20 rounded-[1.6rem] blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+                      <div className="relative">
+                        <ModuleHero
+                          title={t("dash.module.publish.title")}
+                          description={t("dash.module.publish.desc")}
+                          icon={Rocket}
+                          href={`/dashboard/${workspaceId}/publish`}
+                          colorClass="bg-gradient-to-br from-brand to-violet-600"
+                          iconColor="text-white"
+                        />
+                        <div className="absolute top-2 right-2 flex items-center gap-1.5 px-2 py-0.5 bg-brand text-white rounded-full text-[8px] font-black uppercase tracking-widest shadow-lg animate-bounce">
+                          {language === "fr" ? "Nouveau" : "New"}
+                        </div>
+                      </div>
+                    </div>
                 </div>
+
+                {/* 2.5 RECENT PUBLISH SESSIONS */}
+                {recentPublish.length > 0 && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-700">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-black text-foreground uppercase tracking-widest flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-brand" />
+                                {t("dash.recent_publish.title")}
+                            </h3>
+                            <Link href={`/dashboard/${workspaceId}/publish`} className="text-[10px] font-bold text-brand hover:underline flex items-center gap-1">
+                                {language === "fr" ? "Voir tout l'historique" : "View all history"}
+                                <ArrowRight className="h-3 w-3" />
+                            </Link>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {recentPublish.map((proj) => (
+                                <Link 
+                                    key={proj.id}
+                                    href={`/dashboard/${workspaceId}/publish?projectId=${proj.id}`}
+                                    className="bg-surface border border-border rounded-2xl p-4 hover:border-brand/40 hover:shadow-md transition-all group relative overflow-hidden"
+                                >
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-brand/5 rounded-full -mr-12 -mt-12 group-hover:scale-110 transition-transform" />
+                                    <h4 className="text-xs font-bold text-foreground line-clamp-1 mb-1 pr-4">{proj.video_title}</h4>
+                                    <div className="flex items-center gap-2 text-[9px] text-subtle font-medium">
+                                        <span className="bg-surface-secondary px-1.5 py-0.5 rounded border border-border">
+                                            {proj.platform || "YouTube"}
+                                        </span>
+                                        <span>•</span>
+                                        <span>{new Date(proj.updated_at).toLocaleDateString(language === "fr" ? "fr-FR" : "en-US")}</span>
+                                    </div>
+                                    <div className="mt-3 flex items-center gap-1 text-[10px] font-black text-brand opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {t("dash.recent_publish.resume")}
+                                        <ArrowRight className="h-3 w-3" />
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* 3. AI AUDIT REPORT */}
                 {auditResult && (

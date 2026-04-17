@@ -371,6 +371,23 @@ def chat_for_ideas(
     if not workspace:
         raise HTTPException(status_code=404, detail="Workspace non trouvé")
 
+    # Handle Conversation
+    conv_id = request_data.conversation_id
+    is_new = False
+    if not conv_id:
+        # Create new conversation automatically
+        first_msg = request_data.messages[0].content if request_data.messages else "New Chat"
+        title = first_msg[:40] + "..." if len(first_msg) > 40 else first_msg
+        new_conv = models.BrainstormingConversation(
+            workspace_id=workspace_id,
+            title=title
+        )
+        db.add(new_conv)
+        db.commit()
+        db.refresh(new_conv)
+        conv_id = new_conv.id
+        is_new = True
+
     last_vids = db.query(models.YouTubeVideo).filter(
         models.YouTubeVideo.workspace_id == workspace_id
     ).order_by(models.YouTubeVideo.published_at.desc()).limit(5).all()
@@ -389,13 +406,13 @@ def chat_for_ideas(
             language=request_data.language
         )
         
-        # PERSISTENCE: Save user's last message and assistant's response
-        # Note: We save the user message only if it's the last one in the list
+        # PERSISTENCE: Save user's last message and assistant's response to the conversation
         user_msg = request_data.messages[-1]
         db.add(models.BrainstormingMessage(
             role=user_msg.role,
             content=user_msg.content,
-            workspace_id=workspace_id
+            workspace_id=workspace_id,
+            conversation_id=conv_id
         ))
         
         assistant_msg = models.BrainstormingMessage(
@@ -404,15 +421,105 @@ def chat_for_ideas(
             suggested_title=result.get("suggested_title"),
             viral_score=result.get("viral_score"),
             add_to_planning=result.get("add_to_planning", False),
-            workspace_id=workspace_id
+            workspace_id=workspace_id,
+            conversation_id=conv_id
         )
         db.add(assistant_msg)
+        
+        # If it's a new conversation, we might want to update the title based on the assistant's first helpful response too?
+        # For now first prompt is fine.
+        
         db.commit()
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur IA: {str(e)}")
 
-    return schemas.ChatResponse(**result)
+    res = schemas.ChatResponse(**result)
+    res.conversation_id = conv_id
+    return res
+
+@router.get("/{workspace_id}/conversations", response_model=List[schemas.BrainstormingConversationOut])
+def get_conversations(
+    workspace_id: int,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    workspace = db.query(models.Workspace).filter(
+        models.Workspace.id == workspace_id,
+        models.Workspace.owner_id == current_user.id
+    ).first()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace non trouvé")
+        
+    return db.query(models.BrainstormingConversation).filter(
+        models.BrainstormingConversation.workspace_id == workspace_id
+    ).order_by(models.BrainstormingConversation.created_at.desc()).all()
+
+@router.post("/{workspace_id}/conversations", response_model=schemas.BrainstormingConversationOut)
+def create_empty_conversation(
+    workspace_id: int,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    workspace = db.query(models.Workspace).filter(
+        models.Workspace.id == workspace_id,
+        models.Workspace.owner_id == current_user.id
+    ).first()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace non trouvé")
+        
+    new_conv = models.BrainstormingConversation(
+        workspace_id=workspace_id,
+        title="Nouvelle conversation"
+    )
+    db.add(new_conv)
+    db.commit()
+    db.refresh(new_conv)
+    return new_conv
+
+@router.delete("/{workspace_id}/conversations/{conversation_id}")
+def delete_conversation(
+    workspace_id: int,
+    conversation_id: int,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    workspace = db.query(models.Workspace).filter(
+        models.Workspace.id == workspace_id,
+        models.Workspace.owner_id == current_user.id
+    ).first()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace non trouvé")
+        
+    conv = db.query(models.BrainstormingConversation).filter(
+        models.BrainstormingConversation.id == conversation_id,
+        models.BrainstormingConversation.workspace_id == workspace_id
+    ).first()
+    
+    if not conv:
+        raise HTTPException(status_code=404, detail="Conversation non trouvée")
+        
+    db.delete(conv)
+    db.commit()
+    return {"message": "Success"}
+
+@router.get("/{workspace_id}/conversations/{conversation_id}/messages", response_model=List[schemas.BrainstormingMessageOut])
+def get_conversation_history(
+    workspace_id: int,
+    conversation_id: int,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    workspace = db.query(models.Workspace).filter(
+        models.Workspace.id == workspace_id,
+        models.Workspace.owner_id == current_user.id
+    ).first()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace non trouvé")
+        
+    return db.query(models.BrainstormingMessage).filter(
+        models.BrainstormingMessage.conversation_id == conversation_id
+    ).order_by(models.BrainstormingMessage.created_at.asc()).all()
 
 @router.get("/{workspace_id}/chat-history", response_model=List[schemas.BrainstormingMessageOut])
 def get_chat_history(
@@ -740,3 +847,94 @@ def generate_description(
         language=request_data.language
     )
     return desc
+
+# ─── Publishing Memory Endpoints ────────────────────────────
+
+@router.get("/{workspace_id}/publish/projects", response_model=List[schemas.PublishProjectOut])
+def list_publish_projects(
+    workspace_id: int,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    workspace = db.query(models.Workspace).filter(
+        models.Workspace.id == workspace_id,
+        models.Workspace.owner_id == current_user.id
+    ).first()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace non trouvé")
+        
+    return db.query(models.PublishProject).filter(
+        models.PublishProject.workspace_id == workspace_id
+    ).order_by(models.PublishProject.updated_at.desc()).all()
+
+@router.post("/{workspace_id}/publish/save", response_model=schemas.PublishProjectOut)
+def save_publish_project(
+    workspace_id: int,
+    project_data: schemas.PublishProjectSave,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    workspace = db.query(models.Workspace).filter(
+        models.Workspace.id == workspace_id,
+        models.Workspace.owner_id == current_user.id
+    ).first()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace non trouvé")
+
+    if project_data.id:
+        # Update existing
+        db_project = db.query(models.PublishProject).filter(
+            models.PublishProject.id == project_data.id,
+            models.PublishProject.workspace_id == workspace_id
+        ).first()
+        if not db_project:
+            raise HTTPException(status_code=404, detail="Projet non trouvé")
+            
+        db_project.video_title = project_data.video_title
+        db_project.script_summary = project_data.script_summary
+        db_project.keywords = project_data.keywords
+        db_project.language = project_data.language
+        db_project.image_model = project_data.image_model
+        db_project.results_json = project_data.results_json
+    else:
+        # Create new
+        db_project = models.PublishProject(
+            workspace_id=workspace_id,
+            video_title=project_data.video_title,
+            script_summary=project_data.script_summary,
+            keywords=project_data.keywords,
+            language=project_data.language,
+            image_model=project_data.image_model,
+            results_json=project_data.results_json
+        )
+        db.add(db_project)
+    
+    db.commit()
+    db.refresh(db_project)
+    return db_project
+
+@router.delete("/{workspace_id}/publish/projects/{project_id}")
+def delete_publish_project(
+    workspace_id: int,
+    project_id: int,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    workspace = db.query(models.Workspace).filter(
+        models.Workspace.id == workspace_id,
+        models.Workspace.owner_id == current_user.id
+    ).first()
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace non trouvé")
+
+    project = db.query(models.PublishProject).filter(
+        models.PublishProject.id == project_id,
+        models.PublishProject.workspace_id == workspace_id
+    ).first()
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Projet non trouvé")
+        
+    db.delete(project)
+    db.commit()
+    return {"message": "Success"}

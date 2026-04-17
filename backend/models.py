@@ -46,6 +46,7 @@ class Workspace(Base):
     videos = relationship("Video", back_populates="workspace", cascade="all, delete-orphan")
     youtube_videos = relationship("YouTubeVideo", back_populates="workspace", cascade="all, delete-orphan")
     chat_messages = relationship("BrainstormingMessage", back_populates="workspace", cascade="all, delete-orphan")
+    brainstorming_conversations = relationship("BrainstormingConversation", back_populates="workspace", cascade="all, delete-orphan")
     suggested_ideas_json = Column(Text, nullable=True) # Cache pour les 6 suggestions rapides
 
 
@@ -126,6 +127,17 @@ class YouTubeVideo(Base):
 
     workspace = relationship("Workspace", back_populates="youtube_videos")
 
+class BrainstormingConversation(Base):
+    __tablename__ = "brainstorming_conversations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    workspace = relationship("Workspace", back_populates="brainstorming_conversations")
+    messages = relationship("BrainstormingMessage", back_populates="conversation", cascade="all, delete-orphan")
+
 class BrainstormingMessage(Base):
     __tablename__ = "brainstorming_messages"
 
@@ -137,6 +149,25 @@ class BrainstormingMessage(Base):
     add_to_planning = Column(Boolean, default=False)
     
     workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=False)
+    conversation_id = Column(Integer, ForeignKey("brainstorming_conversations.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     workspace = relationship("Workspace", back_populates="chat_messages")
+    conversation = relationship("BrainstormingConversation", back_populates="messages")
+
+class PublishProject(Base):
+    __tablename__ = "publish_projects"
+
+    id = Column(Integer, primary_key=True, index=True)
+    video_title = Column(String, nullable=False)
+    script_summary = Column(Text, nullable=True)
+    keywords = Column(Text, nullable=True)
+    language = Column(String, default="fr")
+    image_model = Column(String, default="flux")
+    results_json = Column(Text, nullable=True) # Full JSON dump of all generated assets
+    
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    workspace = relationship("Workspace") # Simple relationship

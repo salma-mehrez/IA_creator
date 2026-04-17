@@ -267,7 +267,7 @@ export default function AnalysisPage() {
          </div>
          <div className="pb-1">
           <h2 className="text-xl font-heading text-foreground">{workspace.name}</h2>
-          <p className="text-xs text-subtle font-medium">@{workspace.channel_id}</p>
+          
          </div>
         </div>
 

@@ -61,15 +61,16 @@ export default function Home() {
       <p className="text-muted max-w-xl mx-auto text-lg">{t("landing.modules.subtitle")}</p>
      </div>
      
-     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 relative">
       {/* Ligne de connexion au fond (desktop) */}
       <div className="hidden lg:block absolute top-[44px] left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-border to-transparent -z-10" />
 
       {[
-       { num: "01", icon: <BarChart3 className="w-6 h-6" />, title: t("landing.modules.m1.title"), desc: t("landing.modules.m1.desc"), color: "text-indigo-500 dark:text-indigo-400", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
-       { num: "02", icon: <Lightbulb className="w-6 h-6" />, title: t("landing.modules.m2.title"), desc: t("landing.modules.m2.desc"), color: "text-violet-500 dark:text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/20" },
-       { num: "03", icon: <FileText className="w-6 h-6" />, title: t("landing.modules.m3.title"), desc: t("landing.modules.m3.desc"), color: "text-blue-500 dark:text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
-       { num: "04", icon: <Calendar className="w-6 h-6" />, title: t("landing.modules.m4.title"), desc: t("landing.modules.m4.desc"), color: "text-emerald-500 dark:text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+        { num: "01", icon: <BarChart3 className="w-6 h-6" />, title: t("landing.modules.m1.title"), desc: t("landing.modules.m1.desc"), color: "text-indigo-500 dark:text-indigo-400", bg: "bg-indigo-500/10", border: "border-indigo-500/20" },
+        { num: "02", icon: <Lightbulb className="w-6 h-6" />, title: t("landing.modules.m2.title"), desc: t("landing.modules.m2.desc"), color: "text-violet-500 dark:text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/20" },
+        { num: "03", icon: <FileText className="w-6 h-6" />, title: t("landing.modules.m3.title"), desc: t("landing.modules.m3.desc"), color: "text-blue-500 dark:text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+        { num: "04", icon: <Calendar className="w-6 h-6" />, title: t("landing.modules.m4.title"), desc: t("landing.modules.m4.desc"), color: "text-emerald-500 dark:text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+        { num: "05", icon: <Rocket className="w-6 h-6" />, title: t("dash.module.publish.title"), desc: t("dash.module.publish.desc"), color: "text-brand", bg: "bg-brand/10", border: "border-brand/20" },
       ].map((step, i) => (
        <div key={i} className="flex flex-col bg-surface/50 backdrop-blur-sm border border-border p-8 rounded-[2rem] hover:shadow-[0_0_30px_rgba(var(--brand),0.08)] hover:-translate-y-1 transition-all duration-300 group hover:border-brand/30">
         <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-8 border transition-transform duration-500 group-hover:scale-110", step.bg, step.color, step.border)}>
@@ -217,6 +218,19 @@ export default function Home() {
        ]}
        mediaSrc="/maestro_planning.png"
       />
+       <ModelShowcase 
+        num="05" 
+        icon={<Rocket />} 
+        title={t("landing.features.m5.title")} 
+        desc={t("landing.features.m5.desc")} 
+        accent="indigo"
+        features={[
+          t("landing.features.m5.f1"),
+          t("landing.features.m5.f2"),
+          t("landing.features.m5.f3")
+        ]}
+        mediaSrc="/publish_hub.png"
+       />
      </div>
     </div>
    </section>
